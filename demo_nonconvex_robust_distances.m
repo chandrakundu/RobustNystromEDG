@@ -17,7 +17,8 @@
 % G = (n*n) matrix of target-target squared distances
 % Note that G is not observed
 % -------------------------------------------------------------------------
-% Load points
+%% Load points
+clear all;
 outs_cell = pdb2mat("1ubq.pdb");
 P = [outs_cell.X ;outs_cell.Y; outs_cell.Z];
 % Set up problem parameters
@@ -53,69 +54,48 @@ alpha = 0.2;
 
 
 %% non sparse noise
-% k = round(alpha*m);
-% for i = 1:n
-%     % choose k random indices to perturb   
-%     rng(3);
-%     rand_idx = randperm(m);
-%     rand_idx = rand_idx(1:k);
-%     F_corrupted(rand_idx,i)= (1+epsilon*randn).*F(rand_idx,i); 
-% end
+k = round(alpha*m);
+for i = 1:n
+    % choose k random indices to perturb   
+    rng(3);
+    rand_idx = randperm(m);
+    rand_idx = rand_idx(1:k);
+    F_corrupted(rand_idx,i)= (1+epsilon*randn).*F(rand_idx,i); 
+end
 
 
 %% sparse noise 
-S_supp_idx = randsample(m*n, round(alpha*m*n), false);
-S_range = 1*mean(mean(abs(F)));
-S_temp = 2*S_range*rand(m,n)-S_range; 
-S_true = zeros(m, n);
-S_true(S_supp_idx) = S_temp(S_supp_idx);  
-F_corrupted = F + S_true;
+% S_supp_idx = randsample(m*n, round(alpha*m*n), false);
+% S_range = 1*mean(mean(abs(F)));
+% S_temp = 2*S_range*rand(m,n)-S_range; 
+% S_true = zeros(m, n);
+% S_true(S_supp_idx) = S_temp(S_supp_idx);  
+% F_corrupted = F + S_true;
 
+
+%% normalize
+% max_F = max(max(F));
+% F = F / max_F;
+% F_corrupted = F_corrupted/ max_F;
 
 
 % Algorithm for non-convex robust goes here
 
 %% ACCALTPROJ
 addpath rpca\
-% para.mu        = 1.1*get_mu_kappa(F,r);  
-% para.beta_init = r*sqrt(para.mu(1)*para.mu(end))/(sqrt(m*n));
-% para.beta      = r*sqrt(para.mu(1)*para.mu(end))/(1*sqrt(m*n));
-% para.trimming  = true;
-% para.tol       = 1e-20;
-% para.gamma     = 0.5;
-% para.max_iter  = 20;
-% [F_estimated, ~] = AccAltProj( F_corrupted, r, para );
-% 
-% 
-% % Compute relative error in F
-% error = norm(F-F_estimated,"fro"),norm(F,"fro")
+para.mu        = 1.1*get_mu_kappa(F,r);  
+para.beta_init = r*sqrt(para.mu(1)*para.mu(end))/(sqrt(m*n));
+para.beta      = r*sqrt(para.mu(1)*para.mu(end))/(1*sqrt(m*n));
+para.trimming  = true;
+para.tol       = 1e-20;
+para.gamma     = 0.5;
+para.max_iter  = 200;
+[F_estimated, ~] = AccAltProj( F_corrupted, r, para );
 
 
 
 
-% c = 1;
-% S_supp_idx = randsample(m*n, round(alpha*m*n), false);
-% S_range = c*mean(mean(abs(F)));
-% S_temp = 2*S_range*rand(m,n)-S_range; 
-% S_true = zeros(m, n);
-% S_true(S_supp_idx) = S_temp(S_supp_idx);  
-% F_corrupted2 = F + S_true;
-% 
-% 
-% para.mu        = 1.1*get_mu_kappa(F,r);  
-% para.beta_init = r*sqrt(para.mu(1)*para.mu(end))/(sqrt(m*n));
-% para.beta      = r*sqrt(para.mu(1)*para.mu(end))/(1*sqrt(m*n));
-% para.trimming  = true;
-% para.tol       = 1e-5;
-% para.gamma     = 0.65;
-% para.max_iter  = 200;
-% [F_estimated, ~] = AccAltProj( F_corrupted2, r, para );
-% 
-% 
-% error = norm(F-F_estimated,"fro"),norm(F,"fro")
-
-
-% lrpca
+%% lrpca
 % params = struct('r', r,'thresh_low', 1e-6, 'thresh_high', 1e2, 'error_change_thresh', 1e-7);
 % num_iter = 5;
 % etas = repelem(2, num_iter);
@@ -123,9 +103,14 @@ addpath rpca\
 % zetas = max(max(F))*(.8).^(0:num_iter-1);
 % [F_estimated, ~] = LRPCA(F, F_corrupted,etas,zetas, params );
 % 
-% norm(F-F_estimated,"fro"),norm(F,"fro")
 
-% old RobustPCA
-[F_estimated, S] = RobustPCA(F_corrupted);
 
-norm(F-F_estimated,"fro"),norm(F,"fro")
+%% classic RobustPCA
+% [F_estimated, S] = RobustPCA(F_corrupted);
+
+
+
+%% final error
+
+% Compute relative error in F
+error = norm(F-F_estimated,"fro"),norm(F,"fro")
