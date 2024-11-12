@@ -1,0 +1,92 @@
+
+% This script is for sensor localization synthetic data. 
+
+%% load data
+clear;
+addpath rpca\
+
+p = 200;  % number of points
+d = 2;    % dimension of the points
+P = randn(d, p); 
+X = P'*P; % Gram matrix
+
+% Ground distance matrix
+dist = squareform(pdist(P'));
+D = dist.*dist;
+
+% Blocks of D
+m = 20;
+n = p -m;
+E = D(1:m,1:m);
+F = D(1:m,m+1:end);
+G = D(m+1:end,m+1:end);
+
+% Add outliers
+r = d + 2; % rank of the distance matrix
+alpha = 0.2; % percentage of outliers
+
+
+%% non sparse noise 
+epsilon = 0.3;
+k = round(alpha*m);
+F_corrupted = F;
+for i = 1:n
+    % choose k random indices to perturb   
+    rng(3);
+    rand_idx = randperm(m);
+    rand_idx = rand_idx(1:k);
+    F_corrupted(rand_idx,i)= (1+epsilon*randn).*F(rand_idx,i); 
+end
+error = norm(F-F_corrupted,"fro")/norm(F,"fro");
+fprintf("Error of F after the corruption: %f\n", error);
+
+%% sparse noise
+% S_supp_idx = randsample(m*n, round(alpha*m*n), false);
+% S_range = 1*mean(mean(abs(F)));
+% S_temp = 2*S_range*rand(m,n)-S_range; 
+% S_true = zeros(m, n);
+% S_true(S_supp_idx) = S_temp(S_supp_idx);  
+% F_corrupted = F + S_true;
+% error = norm(F-F_corrupted,"fro")/norm(F,"fro");
+% fprintf("Error of F after the corruption: %f\n", error);
+
+%% ACCALTPROJ
+para.mu        = 1.1*get_mu_kappa(F,r);  
+para.beta_init = r*sqrt(para.mu(1)*para.mu(end))/(sqrt(m*n));
+para.beta      = r*sqrt(para.mu(1)*para.mu(end))/(4*sqrt(m*n));
+para.trimming  = false;
+para.tol       = 1e-14;
+para.gamma     = 0.9;
+para.max_iter  = 200;
+[F_estimated, ~] = AccAltProj( F_corrupted, r, para );
+
+error = norm(F-F_estimated,"fro")/norm(F,"fro");
+fprintf("Error of F after RPCA: %f\n", error);
+
+%% Gram matrix estimation and point estimation after removing noise
+
+X_estimated = dist2gram_matrix(E, F_estimated, 0.1);
+
+error = norm(X-X_estimated,"fro")/norm(X,"fro");
+fprintf("Error of X after the estimation: %f\n", error);
+
+[V, Lam] = eigs(X_estimated, d, 'lm');
+P_estimated = V*sqrt(Lam);
+
+
+%% Gram matrix and point estimation no noise case
+
+X_estimated0 = dist2gram_matrix(E, F, 0.1);
+
+error = norm(X-X_estimated0,"fro")/norm(X,"fro");
+fprintf("Error of X after the estimation (No Noise): %f\n", error);
+
+[V, Lam] = eigs(X_estimated0, d, 'lm');
+P_estimated0 = V*sqrt(Lam);
+
+
+%% Visualization
+figure('Position', [100 100 1800 600]);
+viz_nystrom(P, m, 1, "Original points")
+viz_nystrom(P_estimated0', m, 2, "Case: no noise")
+viz_nystrom(P_estimated', m, 3, "Case: noise and after removing the noise")

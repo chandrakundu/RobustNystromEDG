@@ -18,7 +18,8 @@
 % Note that G is not observed
 % -------------------------------------------------------------------------
 %% Load points
-clear all;
+clear;
+addpath rpca\
 outs_cell = pdb2mat("1ubq.pdb");
 P = [outs_cell.X ;outs_cell.Y; outs_cell.Z];
 % Set up problem parameters
@@ -31,6 +32,8 @@ r = sz_P(1);
 p = sz_P(2);
 m = 20; 
 n = p - m ;
+
+X = P'*P; % Gram matrix
 % Create the ground squared distance matrix D
 dist = squareform(pdist(P'));
 D = dist.*dist;
@@ -46,71 +49,75 @@ G = D(m+1:end,m+1:end);
 % The above ensures that the relative error, up to the randomnes is
 % epsilon
 % k = denotes the number of anchor distances that are highly corrupted
-epsilon = 0.1;
-F_corrupted = F;
+epsilon = 0.3;
 r = r + 2;
 
 alpha = 0.2;
 
 
 %% non sparse noise
-k = round(alpha*m);
-for i = 1:n
-    % choose k random indices to perturb   
-    rng(3);
-    rand_idx = randperm(m);
-    rand_idx = rand_idx(1:k);
-    F_corrupted(rand_idx,i)= (1+epsilon*randn).*F(rand_idx,i); 
-end
-
+% k = round(alpha*m);
+% for i = 1:n
+%     % choose k random indices to perturb   
+%     rng(3);
+%     rand_idx = randperm(m);
+%     rand_idx = rand_idx(1:k);
+%     F_corrupted(rand_idx,i)= (1+epsilon*randn).*F(rand_idx,i); 
+% end
+% error = norm(F-F_corrupted,"fro")/norm(F,"fro");
+% fprintf("Error of F after the corruption: %f\n", error);
 
 %% sparse noise 
-% S_supp_idx = randsample(m*n, round(alpha*m*n), false);
-% S_range = 1*mean(mean(abs(F)));
-% S_temp = 2*S_range*rand(m,n)-S_range; 
-% S_true = zeros(m, n);
-% S_true(S_supp_idx) = S_temp(S_supp_idx);  
-% F_corrupted = F + S_true;
+S_supp_idx = randsample(m*n, round(alpha*m*n), false);
+S_range = 1*mean(mean(abs(F)));
+S_temp = 2*S_range*rand(m,n)-S_range; 
+S_true = zeros(m, n);
+S_true(S_supp_idx) = S_temp(S_supp_idx);  
+F_corrupted = F + S_true;
 
+error = norm(F-F_corrupted,"fro")/norm(F,"fro");
+fprintf("Error of F after the corruption: %f\n", error);
 
-%% normalize
-% max_F = max(max(F));
-% F = F / max_F;
-% F_corrupted = F_corrupted/ max_F;
-
-
-% Algorithm for non-convex robust goes here
 
 %% ACCALTPROJ
-addpath rpca\
 para.mu        = 1.1*get_mu_kappa(F,r);  
 para.beta_init = r*sqrt(para.mu(1)*para.mu(end))/(sqrt(m*n));
 para.beta      = r*sqrt(para.mu(1)*para.mu(end))/(1*sqrt(m*n));
-para.trimming  = true;
-para.tol       = 1e-20;
-para.gamma     = 0.5;
+para.trimming  = false;
+para.tol       = 1e-14;
+para.gamma     = 0.9;
 para.max_iter  = 200;
 [F_estimated, ~] = AccAltProj( F_corrupted, r, para );
 
+error = norm(F-F_estimated,"fro")/norm(F,"fro");
+fprintf("Error of F after RPCA: %f\n", error);
+
+%% Gram matrix estimation and point estimation after removing noise
+
+X_estimated = dist2gram_matrix(E, F_estimated, 0.1);
+
+error = norm(X-X_estimated,"fro")/norm(X,"fro");
+fprintf("Error of X after the estimation: %f\n", error);
+
+[V, Lam] = eigs(X_estimated, r, 'lm');
+P_estimated = V*sqrt(Lam);
 
 
+%% Gram matrix and point estimation no noise case
 
-%% lrpca
-% params = struct('r', r,'thresh_low', 1e-6, 'thresh_high', 1e2, 'error_change_thresh', 1e-7);
-% num_iter = 5;
-% etas = repelem(2, num_iter);
-% etas(2) = .1;
-% zetas = max(max(F))*(.8).^(0:num_iter-1);
-% [F_estimated, ~] = LRPCA(F, F_corrupted,etas,zetas, params );
-% 
+X_estimated0 = dist2gram_matrix(E, F, 0.1);
 
+error = norm(X-X_estimated0,"fro")/norm(X,"fro");
+fprintf("Error of X after the estimation (No Noise): %f\n", error);
 
-%% classic RobustPCA
-% [F_estimated, S] = RobustPCA(F_corrupted);
+[V, Lam] = eigs(X_estimated0, r, 'lm');
+P_estimated0 = V*sqrt(Lam);
 
 
+%% save to pdb 
+outs_cell.X = P_estimated0(:,1)';
+outs_cell.Y = P_estimated0(:,2)';
+outs_cell.Z = P_estimated0(:,3)';
+outs_cell.outfile = "1ubq_noise_estimated.pdb";
 
-%% final error
-
-% Compute relative error in F
-error = norm(F-F_estimated,"fro"),norm(F,"fro")
+mat2pdb(outs_cell);

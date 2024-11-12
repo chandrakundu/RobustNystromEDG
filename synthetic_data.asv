@@ -1,0 +1,80 @@
+%% load data
+clear all;
+addpath rpca\
+
+p = 1000;  % number of points
+d = 3;    % dimension of the points
+P = randn(d, p); 
+X = P'*P; % Gram matrix
+
+% Ground distance matrix
+dist = squareform(pdist(P'));
+D = dist.*dist;
+
+% Blocks of D
+m = 20;
+n = p -m;
+E = D(1:m,1:m);
+F = D(1:m,m+1:end);
+G = D(m+1:end,m+1:end);
+
+% Add outliers
+r = d + 2; % rank of the distance matrix
+alpha = 0.2; % percentage of outliers
+
+
+%% non sparse noise 
+% epsilon = 0.3;
+% k = round(alpha*m);
+% for i = 1:n
+%     % choose k random indices to perturb   
+%     rng(3);
+%     rand_idx = randperm(m);
+%     rand_idx = rand_idx(1:k);
+%     F_corrupted(rand_idx,i)= (1+epsilon*randn).*F(rand_idx,i); 
+% end
+% error = norm(F-F_corrupted,"fro")/norm(F,"fro");
+% fprintf("Error after the corruption: %f\n", error);
+
+%% sparse noise
+S_supp_idx = randsample(m*n, round(alpha*m*n), false);
+S_range = 1*mean(mean(abs(F)));
+S_temp = 2*S_range*rand(m,n)-S_range; 
+S_true = zeros(m, n);
+S_true(S_supp_idx) = S_temp(S_supp_idx);  
+F_corrupted = F + S_true;
+error = norm(F-F_corrupted,"fro")/norm(F,"fro");
+fprintf("Error after the corruption: %f\n", error);
+
+%% ACCALTPROJ
+para.mu        = 1.1*get_mu_kappa(F,r);  
+para.beta_init = r*sqrt(para.mu(1)*para.mu(end))/(sqrt(m*n));
+para.beta      = r*sqrt(para.mu(1)*para.mu(end))/(1*sqrt(m*n));
+para.trimming  = false;
+para.tol       = 1e-14;
+para.gamma     = 0.9;
+para.max_iter  = 200;
+[F_estimated, ~] = AccAltProj( F_corrupted, r, para );
+
+error = norm(F-F_estimated,"fro")/norm(F,"fro");
+fprintf("Error after RPCA: %f\n", error);
+
+%% Gram matrix estimation
+
+X_estimated = dist2gram_matrix(E, F_estimated, 0.01);
+
+error = norm(X-X_estimated,"fro")/norm(X,"fro");
+fprintf("Error after the estimation: %f\n", error);
+
+
+%% Points estimation
+[V, Lam] = eigs(X_estimated, d, 'lm');
+P_estimated = V*sqrt(Lam);
+
+
+%% gram matrix and 
+
+%% Visualization
+figure('Position', [100 100 1800 600]);
+viz_nystrom(P, m, 1, "Original")
+viz_nystrom(P_estimated', m, 2, "Estimated after removing noise")
