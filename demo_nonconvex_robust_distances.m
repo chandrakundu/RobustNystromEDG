@@ -20,7 +20,7 @@
 %% Load points
 clear;
 addpath rpca\
-outs_cell = pdb2mat("1ubq.pdb");
+outs_cell = pdb2mat("1ubq_modified.pdb");
 P = [outs_cell.X ;outs_cell.Y; outs_cell.Z];
 % Set up problem parameters
 % m = number of anchors
@@ -28,9 +28,9 @@ P = [outs_cell.X ;outs_cell.Y; outs_cell.Z];
 % p = m+n
 % r: embedding dimension
 sz_P = size(P);
-r = sz_P(1);
+d= sz_P(1);
 p = sz_P(2);
-m = 20; 
+m = 30; 
 n = p - m ;
 
 X = P'*P; % Gram matrix
@@ -50,9 +50,9 @@ G = D(m+1:end,m+1:end);
 % epsilon
 % k = denotes the number of anchor distances that are highly corrupted
 epsilon = 0.3;
-r = r + 2;
+r = d + 2;
 
-alpha = 0.2;
+alpha = 0.05;
 
 
 %% non sparse noise
@@ -94,30 +94,19 @@ fprintf("Error of F after RPCA: %f\n", error);
 
 %% Gram matrix estimation and point estimation after removing noise
 
-X_estimated = dist2gram_matrix(E, F_estimated, 0.1);
+X_estimated = dist2gram_matrix(E, F_estimated, 0.01);
 
-error = norm(X-X_estimated,"fro")/norm(X,"fro");
-fprintf("Error of X after the estimation: %f\n", error);
-
-[V, Lam] = eigs(X_estimated, r, 'lm');
+[V, Lam] = eigs(X_estimated, d, 'lm');
 P_estimated = V*sqrt(Lam);
 
 
-%% Gram matrix and point estimation no noise case
-
-X_estimated0 = dist2gram_matrix(E, F, 0.1);
-
-error = norm(X-X_estimated0,"fro")/norm(X,"fro");
-fprintf("Error of X after the estimation (No Noise): %f\n", error);
-
-[V, Lam] = eigs(X_estimated0, r, 'lm');
-P_estimated0 = V*sqrt(Lam);
-
+%% rmse
+rmse = Compute_RMSE(P',P_estimated)
 
 %% save to pdb 
-outs_cell.X = P_estimated0(:,1)';
-outs_cell.Y = P_estimated0(:,2)';
-outs_cell.Z = P_estimated0(:,3)';
+outs_cell.X = P_estimated(:,1);
+outs_cell.Y = P_estimated(:,2);
+outs_cell.Z = P_estimated(:,3);
 outs_cell.outfile = "1ubq_noise_estimated.pdb";
 
 mat2pdb(outs_cell);

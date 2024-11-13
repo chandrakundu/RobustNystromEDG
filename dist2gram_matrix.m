@@ -1,4 +1,4 @@
-function X = dist2gram_matrix(E, F, tol)
+function [X, X1] = dist2gram_matrix(E, F, tol)
     % dist2gram_matrix - Converts distance matrices to Gram matrices.
     % The structure of D is as follows:
     % D = [E   F
@@ -20,6 +20,7 @@ function X = dist2gram_matrix(E, F, tol)
 
     m = size(E, 1);
     n = size(F, 2);
+    p = m+n;
 
     mean_E_all = mean(E, "all");    % Scalar (mean of all elements of E)
     mean_E_cols = mean(E, 1);       % Row vector, 1 x m (mean of each column of E)
@@ -37,6 +38,12 @@ function X = dist2gram_matrix(E, F, tol)
     mean_F_cols_exp = repmat(mean_F_cols, m, 1);   % Expand mean_F_cols for matrix subtraction in Gram_B (m x n)
 
     Gram_B = -0.5 * (F - mean_F_cols_exp - mean_E_rows_for_F + mean_E_all);
+
+    % s = zeros(p,1);
+    % s(1:m) = 1/m;
+    % J = eye(p) - (ones(p,1)*s');
+    % D = [E F;F' zeros(n,n)];
+    % X1 = -0.5 * J*D*J';
 
     X = [Gram_A Gram_B; Gram_B' Gram_B'*(pinv(Gram_A,tol))*Gram_B];
 end
