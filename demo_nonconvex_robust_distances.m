@@ -20,7 +20,8 @@
 %% Load points
 clear;
 addpath rpca\
-outs_cell = pdb2mat("1ubq_modified.pdb");
+outs_cell = pdb2mat("data/proteins/1ubq_modified.pdb");
+% outs_cell = pdb2mat("data/proteins/1w2e.pdb");
 P = [outs_cell.X ;outs_cell.Y; outs_cell.Z];
 % Set up problem parameters
 % m = number of anchors
@@ -30,7 +31,7 @@ P = [outs_cell.X ;outs_cell.Y; outs_cell.Z];
 sz_P = size(P);
 d= sz_P(1);
 p = sz_P(2);
-m = 30; 
+m = 110; 
 n = p - m ;
 
 X = P'*P; % Gram matrix
@@ -56,27 +57,28 @@ alpha = 0.05;
 
 
 %% non sparse noise
-% k = round(alpha*m);
-% for i = 1:n
-%     % choose k random indices to perturb   
-%     rng(3);
-%     rand_idx = randperm(m);
-%     rand_idx = rand_idx(1:k);
-%     F_corrupted(rand_idx,i)= (1+epsilon*randn).*F(rand_idx,i); 
-% end
-% error = norm(F-F_corrupted,"fro")/norm(F,"fro");
-% fprintf("Error of F after the corruption: %f\n", error);
-
-%% sparse noise 
-S_supp_idx = randsample(m*n, round(alpha*m*n), false);
-S_range = 1*mean(mean(abs(F)));
-S_temp = 2*S_range*rand(m,n)-S_range; 
-S_true = zeros(m, n);
-S_true(S_supp_idx) = S_temp(S_supp_idx);  
-F_corrupted = F + S_true;
-
+k = round(alpha*m);
+F_corrupted = F;
+for i = 1:n
+    % choose k random indices to perturb   
+    rng(3);
+    rand_idx = randperm(m);
+    rand_idx = rand_idx(1:k);
+    F_corrupted(rand_idx,i)= (1+epsilon*randn).*F(rand_idx,i); 
+end
 error = norm(F-F_corrupted,"fro")/norm(F,"fro");
 fprintf("Error of F after the corruption: %f\n", error);
+
+%% sparse noise 
+% S_supp_idx = randsample(m*n, round(alpha*m*n), false);
+% S_range = 1*mean(mean(abs(F)));
+% S_temp = 2*S_range*rand(m,n)-S_range; 
+% S_true = zeros(m, n);
+% S_true(S_supp_idx) = S_temp(S_supp_idx);  
+% F_corrupted = F + S_true;
+% 
+% error = norm(F-F_corrupted,"fro")/norm(F,"fro");
+% fprintf("Error of F after the corruption: %f\n", error);
 
 
 %% ACCALTPROJ
@@ -104,9 +106,9 @@ P_estimated = V*sqrt(Lam);
 rmse = Compute_RMSE(P',P_estimated)
 
 %% save to pdb 
-outs_cell.X = P_estimated(:,1);
-outs_cell.Y = P_estimated(:,2);
-outs_cell.Z = P_estimated(:,3);
-outs_cell.outfile = "1ubq_noise_estimated.pdb";
-
-mat2pdb(outs_cell);
+% outs_cell.X = P_estimated(:,1);
+% outs_cell.Y = P_estimated(:,2);
+% outs_cell.Z = P_estimated(:,3);
+% outs_cell.outfile = "1ubq_noise_estimated.pdb";
+% 
+% mat2pdb(outs_cell);

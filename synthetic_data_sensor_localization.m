@@ -7,8 +7,14 @@ addpath rpca\
 
 p = 100;  % number of points
 d = 2;    % dimension of the points
+m = 20;
+n = p - m;
 % P = randn(d, p); 
-P = -1000+2000.*rand(d,p);
+hs = haltonset(d, 'Skip', 1e3, 'Leap', 1e2);
+hs = scramble(hs, 'RR2');
+P1 = -100 + 200 * net(hs, m);
+P2 = -100+200.*rand(d,n);
+P = [P1' P2];
 X = P'*P; % Gram matrix
 
 % Ground distance matrix
@@ -17,8 +23,7 @@ D = dist.*dist;
 
 % Blocks of D
 % m = round(4*(d+2)*log(p));
-m = 20;
-n = p -m;
+
 E = D(1:m,1:m);
 F = D(1:m,m+1:end);
 G = D(m+1:end,m+1:end);
@@ -93,7 +98,8 @@ rmse = Compute_RMSE(P',P_estimated)
 
 
 %% Visualization
-figure('Position', [100 100 1800 600]);
-viz_nystrom(P, m, 1, "Original points")
-% viz_nystrom(P_estimated0', m, 2, "Case: no noise")
-viz_nystrom(P_estimated', m, 3, "Case: noise and after removing the noise")
+% figure('Position', [100 100 1800 600]);
+% viz_nystrom(P, m, 1, "Original points")
+% % viz_nystrom(P_estimated0', m, 2, "Case: no noise")
+% viz_nystrom(P_estimated', m, 3, "Case: noise and after removing the noise")
+plot_points(P',P_estimated,m)

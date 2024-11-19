@@ -1,0 +1,99 @@
+clear;
+addpath rpca\
+% outs_cell = pdb2mat("data/proteins/1ubq_modified.pdb");
+outs_cell = pdb2mat("data/proteins/1w2e.pdb");
+P = [outs_cell.X ;outs_cell.Y; outs_cell.Z];
+
+% Define parameters
+m_values = 10:10:110;
+alpha_values = 0.05:0.05:0.3;
+n_trials = 50; % Number of trials
+res_file = "results/res_protein_1w2e_tr50_mean_std.txt";
+
+% Initialize results matrices
+rmse_matrix = zeros(length(m_values), length(alpha_values));
+std_matrix = zeros(length(m_values), length(alpha_values));
+
+% Run trials and store RMSE values
+for i = 1:length(m_values)
+    for j = 1:length(alpha_values)
+        [rmse, std_dev] = run_trial_protein(P, m_values(i), alpha_values(j), n_trials);
+        rmse_matrix(i, j) = rmse; % Store RMSE in matrix
+        std_matrix(i, j) = std_dev; % Store standard deviation in matrix
+    end
+end
+
+% Open file for writing
+fid = fopen(res_file, 'w');
+
+% Write Markdown table header
+fprintf(fid, '| m \\ alpha |');
+for alpha = alpha_values
+    fprintf(fid, ' %.2f |', alpha);
+end
+fprintf(fid, '\n|---|');
+fprintf(fid, repmat('---|', 1, length(alpha_values)));
+
+% Write data rows
+for i = 1:length(m_values)
+    fprintf(fid, '\n| %d |', m_values(i));
+    for j = 1:length(alpha_values)
+        fprintf(fid, ' %.4f (%.4f) |', rmse_matrix(i, j), std_matrix(i, j));
+    end
+end
+
+% Close file
+fclose(fid);
+
+%% Trials
+function [rmse, std_dev] = run_trial_protein(P, m, alpha, n_trials)
+
+    rmses = zeros(n_trials, 1);
+
+    for trial = 1:n_trials
+        sz_P = size(P);
+        d= sz_P(1);
+        p = sz_P(2);
+        r = d+2;  % rank of the distance matrix
+        
+        % Ground distance matrix
+        dist = squareform(pdist(P'));
+        D = dist.*dist;
+
+        % Blocks of D
+        % m = round(4*(d+2)*log(p));
+        n = p - m;
+        E = D(1:m,1:m);
+        F = D(1:m,m+1:end);
+
+        % sparse outliers
+        S_supp_idx = randsample(m*n, round(alpha*m*n), false);
+        S_range = 1*mean(mean(abs(F)));
+        S_temp = 2*S_range*rand(m,n)-S_range; 
+        S_true = zeros(m, n);
+        S_true(S_supp_idx) = S_temp(S_supp_idx);  
+        F_corrupted = F + S_true;
+
+        % RPCA
+        para.mu        = 1.1*get_mu_kappa(F,r);  
+        para.beta_init = r*sqrt(para.mu(1)*para.mu(end))/(sqrt(m*n));
+        para.beta      = r*sqrt(para.mu(1)*para.mu(end))/(4*sqrt(m*n));
+        para.trimming  = false;
+        para.tol       = 1e-14;
+        para.gamma     = 0.9;
+        para.max_iter  = 500;
+        [F_estimated, ~] = AccAltProj( F_corrupted, r, para );
+
+        % point estimation after removing noise
+        X_estimated = dist2gram_matrix(E, F_estimated, 0.01);
+
+        [V, Lam] = eigs(X_estimated, d, 'lm');
+        P_estimated = V*sqrt(Lam);
+
+        % rmse
+        [rmses(trial), ~, ~] = Compute_RMSE(P',P_estimated);    
+    end
+
+    rmse = mean(rmses);
+    std_dev = std(rmses);
+end
