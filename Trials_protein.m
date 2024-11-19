@@ -1,14 +1,20 @@
 clear;
 addpath rpca\
 % outs_cell = pdb2mat("data/proteins/1ubq_modified.pdb");
+% res_file = "results/res_protein_1ubq_random_anchors_tr50_mean_std.txt";
+
 outs_cell = pdb2mat("data/proteins/1w2e.pdb");
-P = [outs_cell.X ;outs_cell.Y; outs_cell.Z];
+res_file = "results/res_protein_1w2e_random_anchor_tr50_mean_std.txt";
+
+
+PP = [outs_cell.X ;outs_cell.Y; outs_cell.Z];
 
 % Define parameters
 m_values = 10:10:110;
 alpha_values = 0.05:0.05:0.3;
 n_trials = 50; % Number of trials
-res_file = "results/res_protein_1w2e_tr50_mean_std.txt";
+
+
 
 % Initialize results matrices
 rmse_matrix = zeros(length(m_values), length(alpha_values));
@@ -17,7 +23,7 @@ std_matrix = zeros(length(m_values), length(alpha_values));
 % Run trials and store RMSE values
 for i = 1:length(m_values)
     for j = 1:length(alpha_values)
-        [rmse, std_dev] = run_trial_protein(P, m_values(i), alpha_values(j), n_trials);
+        [rmse, std_dev] = run_trial_protein(PP, m_values(i), alpha_values(j), n_trials);
         rmse_matrix(i, j) = rmse; % Store RMSE in matrix
         std_matrix(i, j) = std_dev; % Store standard deviation in matrix
     end
@@ -46,15 +52,26 @@ end
 fclose(fid);
 
 %% Trials
-function [rmse, std_dev] = run_trial_protein(P, m, alpha, n_trials)
+function [rmse, std_dev] = run_trial_protein(PP, m, alpha, n_trials)
 
     rmses = zeros(n_trials, 1);
 
     for trial = 1:n_trials
-        sz_P = size(P);
+        sz_P = size(PP);
         d= sz_P(1);
         p = sz_P(2);
+        n = p - m;
         r = d+2;  % rank of the distance matrix
+
+        anchor_indices = randperm(p, m);
+        target_indices = setdiff(1:p, anchor_indices);
+
+        P1 = PP(:, anchor_indices); % Anchors
+        P2 = PP(:, target_indices); % Target nodes
+
+        % Combine P1 and P2 to form new P
+        P = [P1, P2];
+        % P = PP; % Uncomment this line to not randomly select anchor points
         
         % Ground distance matrix
         dist = squareform(pdist(P'));
@@ -62,7 +79,7 @@ function [rmse, std_dev] = run_trial_protein(P, m, alpha, n_trials)
 
         % Blocks of D
         % m = round(4*(d+2)*log(p));
-        n = p - m;
+        
         E = D(1:m,1:m);
         F = D(1:m,m+1:end);
 

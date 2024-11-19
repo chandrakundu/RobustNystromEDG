@@ -2,10 +2,10 @@ clear;
 addpath rpca\
 
 % Define parameters
-m_values = 10:5:40;
+m_values = 10:5:20;
 alpha_values = 0.05:0.05:0.3;
-n_trials = 50; % Number of trials
-res_file = "results/res_synthetic_tr50_mean_with_std.txt";
+n_trials = 100; % Number of trials
+res_file = "results/res_synthetic_tr100_mean_with_std.txt";
 
 % Initialize results matrices
 rmse_matrix = zeros(length(m_values), length(alpha_values));
