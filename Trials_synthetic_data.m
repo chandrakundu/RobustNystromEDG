@@ -1,11 +1,26 @@
 clear;
 addpath rpca\
 
+% This script runs trials on synthetic data to evaluate the performance of
+% Robust Nystrom method for different values of m and alpha. The results
+% are stored in a Markdown table format in a specified file.
+%
+% Parameters:
+%   m_values: Array of m values to test
+%   alpha_values: Array of alpha values to test
+%   n_trials: Number of trials to run for each combination of m and alpha
+%   res_file: File path to save the results
+%
+% The script initializes result matrices for RMSE and standard deviation,
+% runs the trials, and writes the results to the specified file.
+
+
+
 % Define parameters
-m_values = 10:5:20;
-alpha_values = 0.05:0.05:0.3;
-n_trials = 100; % Number of trials
-res_file = "results/res_synthetic_tr100_mean_with_std.txt";
+m_values = 10:10:60;
+alpha_values = 0.1:0.1:0.3;
+n_trials = 50; % Number of trials
+res_file = "draft_res/res_synthetic_tr50_D.txt";
 
 % Initialize results matrices
 rmse_matrix = zeros(length(m_values), length(alpha_values));
@@ -35,6 +50,7 @@ fprintf(fid, repmat('---|', 1, length(alpha_values)));
 for i = 1:length(m_values)
     fprintf(fid, '\n| %d |', m_values(i));
     for j = 1:length(alpha_values)
+        % fprintf(fid, ' %.2e (%.2e) |', rmse_matrix(i, j), std_matrix(i, j));
         fprintf(fid, ' %.4f (%.4f) |', rmse_matrix(i, j), std_matrix(i, j));
     end
 end
@@ -48,7 +64,7 @@ function [rmse, std_dev] = run_trial_synthetic(m, alpha, n_trials)
     rmses = zeros(n_trials, 1);
 
     for trial = 1:n_trials
-        p = 200;  % number of points
+        p = 500;  % number of points
         d = 2;    % dimension of the points
         n = p - m;
 

@@ -20,8 +20,8 @@
 %% Load points
 clear;
 addpath rpca\
-outs_cell = pdb2mat("data/proteins/1ubq_modified.pdb");
-% outs_cell = pdb2mat("data/proteins/1w2e.pdb");
+% outs_cell = pdb2mat("data/proteins/1ubq_modified.pdb");
+outs_cell = pdb2mat("data/proteins/1w2e.pdb");
 P = [outs_cell.X ;outs_cell.Y; outs_cell.Z];
 % Set up problem parameters
 % m = number of anchors
@@ -31,7 +31,7 @@ P = [outs_cell.X ;outs_cell.Y; outs_cell.Z];
 sz_P = size(P);
 d= sz_P(1);
 p = sz_P(2);
-m = 110; 
+m = 200; 
 n = p - m ;
 
 X = P'*P; % Gram matrix
@@ -106,9 +106,9 @@ P_estimated = V*sqrt(Lam);
 rmse = Compute_RMSE(P',P_estimated)
 
 %% save to pdb 
-% outs_cell.X = P_estimated(:,1);
-% outs_cell.Y = P_estimated(:,2);
-% outs_cell.Z = P_estimated(:,3);
-% outs_cell.outfile = "1ubq_noise_estimated.pdb";
-% 
-% mat2pdb(outs_cell);
+outs_cell.X = P_estimated(:,1);
+outs_cell.Y = P_estimated(:,2);
+outs_cell.Z = P_estimated(:,3);
+% outs_cell.outfile = "data/proteins/1ubq_noise_estimated.pdb";
+outs_cell.outfile = "data/proteins/1w2e_noise_estimated.pdb";
+mat2pdb(outs_cell);

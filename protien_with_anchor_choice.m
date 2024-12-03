@@ -20,8 +20,10 @@
 %% Load points
 clear;
 addpath rpca\
-outs_cell = pdb2mat("data/proteins/1ubq_modified.pdb");
-% outs_cell = pdb2mat("data/proteins/1w2e.pdb");
+% outs_cell = pdb2mat("data/proteins/1ubq_modified.pdb");
+% protein_name = "1ubq_modified";
+protein_name = "1ptq";
+outs_cell = pdb2mat(strcat("data/proteins/",protein_name,".pdb"));
 PP = [outs_cell.X ;outs_cell.Y; outs_cell.Z];
 % Set up problem parameters
 % m = number of anchors
@@ -31,7 +33,8 @@ PP = [outs_cell.X ;outs_cell.Y; outs_cell.Z];
 sz_P = size(PP);
 d= sz_P(1);
 p = sz_P(2);
-m = 20; 
+m = 30; 
+alpha = 0.2;
 n = p - m ;
 
 % Randomly select anchor points
@@ -69,7 +72,7 @@ G = D(m+1:end,m+1:end);
 epsilon = 0.3;
 r = d + 2;
 
-alpha = 0.1;
+
 
 
 %% non sparse noise
@@ -127,6 +130,7 @@ rmse = Compute_RMSE(P',P_estimated)
 outs_cell.X = P_estimated(idx_aligned,1);
 outs_cell.Y = P_estimated(idx_aligned,2);
 outs_cell.Z = P_estimated(idx_aligned,3);
-outs_cell.outfile = "data/proteins/1ubq_estimated.pdb";
+outs_cell.outfile = strcat("data/proteins/"+protein_name,"_estimated.pdb");
+% outs_cell.outfile = "data/proteins/1w2e_estimated.pdb";
 
 mat2pdb(outs_cell);

@@ -1,58 +1,64 @@
-clear;
 addpath rpca\
-% outs_cell = pdb2mat("data/proteins/1ubq_modified.pdb");
-% res_file = "results/res_protein_1ubq_random_anchors_tr50_mean_std.txt";
 
-outs_cell = pdb2mat("data/proteins/1w2e.pdb");
-res_file = "results/res_protein_1w2e_random_anchor_tr50_mean_std.txt";
+% "2lum", "5wov"
+% protein_names = ["1ax8", "1ptq"];
+% protein_names = ["2lum", "5wov"];
+protein_names = ["1w2e","1ubq_modified"];
 
-
-PP = [outs_cell.X ;outs_cell.Y; outs_cell.Z];
-
-% Define parameters
-m_values = 10:10:110;
-alpha_values = 0.05:0.05:0.3;
-n_trials = 50; % Number of trials
+for pn = 1:length(protein_names)
+    protein_name= protein_names(pn);
+    protein_file = strcat("data/proteins/",protein_name,".pdb");
+    res_file = strcat("results/res_",protein_name,"_tr50.txt"); 
+    outs_cell = pdb2mat(protein_file);
 
 
+    PP = [outs_cell.X ;outs_cell.Y; outs_cell.Z];
 
-% Initialize results matrices
-rmse_matrix = zeros(length(m_values), length(alpha_values));
-std_matrix = zeros(length(m_values), length(alpha_values));
+    % Define parameters
+    m_values = 10:10:60;
+    alpha_values = 0.05:0.05:0.3;
+    n_trials = 50; % Number of trials
 
-% Run trials and store RMSE values
-for i = 1:length(m_values)
-    for j = 1:length(alpha_values)
-        [rmse, std_dev] = run_trial_protein(PP, m_values(i), alpha_values(j), n_trials);
-        rmse_matrix(i, j) = rmse; % Store RMSE in matrix
-        std_matrix(i, j) = std_dev; % Store standard deviation in matrix
+
+
+    % Initialize results matrices
+    rmse_matrix = zeros(length(m_values), length(alpha_values));
+    std_matrix = zeros(length(m_values), length(alpha_values));
+
+    % Run trials and store RMSE values
+    for i = 1:length(m_values)
+        for j = 1:length(alpha_values)
+            [rmse, std_dev] = run_trial_protein(PP, m_values(i), alpha_values(j), n_trials, protein_name);
+            rmse_matrix(i, j) = rmse; % Store RMSE in matrix
+            std_matrix(i, j) = std_dev; % Store standard deviation in matrix
+        end
     end
-end
 
-% Open file for writing
-fid = fopen(res_file, 'w');
+    % Open file for writing
+    fid = fopen(res_file, 'w');
 
-% Write Markdown table header
-fprintf(fid, '| m \\ alpha |');
-for alpha = alpha_values
-    fprintf(fid, ' %.2f |', alpha);
-end
-fprintf(fid, '\n|---|');
-fprintf(fid, repmat('---|', 1, length(alpha_values)));
-
-% Write data rows
-for i = 1:length(m_values)
-    fprintf(fid, '\n| %d |', m_values(i));
-    for j = 1:length(alpha_values)
-        fprintf(fid, ' %.4f (%.4f) |', rmse_matrix(i, j), std_matrix(i, j));
+    % Write Markdown table header
+    fprintf(fid, '| m \\ alpha |');
+    for alpha = alpha_values
+        fprintf(fid, ' %.2f |', alpha);
     end
-end
+    fprintf(fid, '\n|---|');
+    fprintf(fid, repmat('---|', 1, length(alpha_values)));
 
-% Close file
-fclose(fid);
+    % Write data rows
+    for i = 1:length(m_values)
+        fprintf(fid, '\n| %d (%d) |', m_values(i), length(PP));
+        for j = 1:length(alpha_values)
+            fprintf(fid, ' %.2f (%.2f) |', rmse_matrix(i, j), std_matrix(i, j));
+        end
+    end
+
+    % Close file
+    fclose(fid);
+end
 
 %% Trials
-function [rmse, std_dev] = run_trial_protein(PP, m, alpha, n_trials)
+function [rmse, std_dev] = run_trial_protein(PP, m, alpha, n_trials,protein_name)
 
     rmses = zeros(n_trials, 1);
 
@@ -108,7 +114,18 @@ function [rmse, std_dev] = run_trial_protein(PP, m, alpha, n_trials)
         P_estimated = V*sqrt(Lam);
 
         % rmse
-        [rmses(trial), ~, ~] = Compute_RMSE(P',P_estimated);    
+        [rmses(trial), ~, ~] = Compute_RMSE(P',P_estimated);
+        
+        % if trial == n_trials
+        %     idx_anchors = [anchor_indices target_indices];
+        %     [~,idx_aligned] = ismember(1:p,idx_anchors);
+        %     % Save to pdb
+        %     outs_cell.X = P_estimated(idx_aligned,1);
+        %     outs_cell.Y = P_estimated(idx_aligned,2);
+        %     outs_cell.Z = P_estimated(idx_aligned,3);
+        %     outs_cell.outfile = strcat('data/proteins/estimated/', protein_name, '_m', num2str(m), '_a', num2str(alpha), '.pdb');
+        %     mat2pdb(outs_cell);
+        % end
     end
 
     rmse = mean(rmses);

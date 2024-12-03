@@ -15,6 +15,8 @@ hs = scramble(hs, 'RR2');
 P1 = -100 + 200 * net(hs, m);
 P2 = -100+200.*rand(d,n);
 P = [P1' P2];
+
+
 X = P'*P; % Gram matrix
 
 % Ground distance matrix
