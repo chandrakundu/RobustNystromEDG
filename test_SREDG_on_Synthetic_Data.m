@@ -17,8 +17,8 @@ P1 = -100 + 200 * net(hs, m);
 P2 = -100+200.*rand(d,n);
 P = [P1' P2];
 
-
-X = P'*P; % Gram matrix
+% Gram matrix
+X = P'*P; 
 
 % Ground distance matrix
 dist = squareform(pdist(P'));
@@ -35,20 +35,6 @@ G = D(m+1:end,m+1:end);
 r = d + 2; % rank of the distance matrix
 
 
-%% non sparse noise 
-% epsilon = 0.3;
-% k = round(alpha*m);
-% F_corrupted = F;
-% for i = 1:n
-%     % choose k random indices to perturb   
-%     rng(3);
-%     rand_idx = randperm(m);
-%     rand_idx = rand_idx(1:k);
-%     F_corrupted(rand_idx,i)= (1+epsilon*randn).*F(rand_idx,i); 
-% end
-% error = norm(F-F_corrupted,"fro")/norm(F,"fro");
-% fprintf("Error of F after the corruption: %f\n", error);
-
 %% sparse noise
 S_supp_idx = randsample(m*n, round(alpha*m*n), false);
 S_range = 1*mean(mean(abs(F)));
@@ -62,7 +48,7 @@ fprintf("Error of F after the corruption: %f\n", error);
 
 
 
-%% ACCALTPROJ
+%% ROBUST PCA Params
 para.mu        = 1.1*get_mu_kappa(F,r);  
 para.beta_init = r*sqrt(para.mu(1)*para.mu(end))/(sqrt(m*n));
 para.beta      = r*sqrt(para.mu(1)*para.mu(end))/(4*sqrt(m*n));
@@ -70,18 +56,11 @@ para.trimming  = false;
 para.tol       = 1e-14;
 para.gamma     = 0.9;
 para.max_iter  = 500;
-[F_estimated, ~] = AccAltProj( F_corrupted, r, para );
 
 
+%% Apply SREDG
+X_estimated = SREDG(E,F_corrupted,r,@AccAltProj, para);
 
-error = norm(F-F_estimated,"fro")/norm(F,"fro");
-fprintf("Error of F after RPCA: %f\n", error);
-
-%% Gram matrix estimation and point estimation after removing noise
-
-% X_estimated = dist2gram_matrix(E, F_estimated, 0.01);
-X_estimated = dist2gram(E, F_estimated);
-% neg_eig_value = count_negative_eigenvalues(X_estimated);
 
 
 error = norm(X-X_estimated,"fro")/norm(X,"fro");
@@ -91,25 +70,11 @@ fprintf("Error of X after the estimation: %f\n", error);
 P_estimated = V*sqrt(Lam);
 
 
-% %% Gram matrix and point estimation no noise case
-% 
-% X_estimated0 = dist2gram_matrix(E, F, 0.01);
-% 
-% error = norm(X-X_estimated0,"fro")/norm(X,"fro");
-% fprintf("Error of X after the estimation (No Noise): %f\n", error);
-% 
-% [V, Lam] = eigs(X_estimated0, d, 'lm');
-% P_estimated0 = V*sqrt(Lam);
 
 
 %% Compute RMSE
-
 [rmse, ~, ~] = Compute_RMSE(P',P_estimated)
 
 
 %% Visualization
-% figure('Position', [100 100 1800 600]);
-% viz_nystrom(P, m, 1, "Original points")
-% % viz_nystrom(P_estimated0', m, 2, "Case: no noise")
-% viz_nystrom(P_estimated', m, 3, "Case: noise and after removing the noise")
 plot_points(P',P_estimated,m)

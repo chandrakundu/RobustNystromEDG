@@ -20,7 +20,7 @@ addpath rpca\
 m_values = 10:10:60;
 alpha_values = 0.1:0.1:0.3;
 n_trials = 50; % Number of trials
-res_file = "draft_res/res_synthetic_tr50_D.txt";
+res_file = "results/res_synthetic_tr50_r3_v2.txt";
 
 % Initialize results matrices
 rmse_matrix = zeros(length(m_values), length(alpha_values));
@@ -65,7 +65,7 @@ function [rmse, std_dev] = run_trial_synthetic(m, alpha, n_trials)
 
     for trial = 1:n_trials
         p = 500;  % number of points
-        d = 2;    % dimension of the points
+        d = 3;    % dimension of the points
         n = p - m;
 
         % generates points that are more evenly distributed across the given range using Halton sequence   
@@ -107,7 +107,7 @@ function [rmse, std_dev] = run_trial_synthetic(m, alpha, n_trials)
         [F_estimated, ~] = AccAltProj( F_corrupted, r, para );
 
         % point estimation after removing noise
-        X_estimated = dist2gram_matrix(E, F_estimated, 0.01);
+        X_estimated = dist2gram(E, F_estimated);
 
         [V, Lam] = eigs(X_estimated, d, 'lm');
         P_estimated = V*sqrt(Lam);

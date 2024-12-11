@@ -3,12 +3,13 @@ addpath rpca\
 % "2lum", "5wov"
 % protein_names = ["1ax8", "1ptq"];
 % protein_names = ["2lum", "5wov"];
-protein_names = ["1w2e","1ubq_modified"];
+% protein_names = ["1w2e","1ubq_modified"];
+protein_names = ["1w2e","1ptq"];
 
 for pn = 1:length(protein_names)
     protein_name= protein_names(pn);
     protein_file = strcat("data/proteins/",protein_name,".pdb");
-    res_file = strcat("results/res_",protein_name,"_tr50.txt"); 
+    res_file = strcat("results/res_",protein_name,"_tr50_v2.txt"); 
     outs_cell = pdb2mat(protein_file);
 
 
@@ -108,7 +109,7 @@ function [rmse, std_dev] = run_trial_protein(PP, m, alpha, n_trials,protein_name
         [F_estimated, ~] = AccAltProj( F_corrupted, r, para );
 
         % point estimation after removing noise
-        X_estimated = dist2gram_matrix(E, F_estimated, 0.01);
+        X_estimated = dist2gram(E, F_estimated);
 
         [V, Lam] = eigs(X_estimated, d, 'lm');
         P_estimated = V*sqrt(Lam);

@@ -115,7 +115,9 @@ fprintf("Error of F after RPCA: %f\n", error);
 
 %% Gram matrix estimation and point estimation after removing noise
 
-X_estimated = dist2gram_matrix(E, F_estimated, 0.01);
+% X_estimated = dist2gram_matrix(E, F_estimated, 0.01);
+X_estimated = dist2gram(E, F_estimated);
+
 
 [V, Lam] = eigs(X_estimated, d, 'lm');
 P_estimated = V*sqrt(Lam);

@@ -5,10 +5,10 @@
 clear;
 addpath rpca\
 
-p = 100;  % number of points
+p = 1000;  % number of points
 d = 2;    % dimension of the points
-m = 20;
-alpha = 0.05; % percentage of outliers
+m = 60;
+alpha = 0.60; % percentage of outliers
 n = p - m;
 % P = randn(d, p); 
 hs = haltonset(d, 'Skip', 1e3, 'Leap', 1e2);
@@ -50,17 +50,13 @@ r = d + 2; % rank of the distance matrix
 % fprintf("Error of F after the corruption: %f\n", error);
 
 %% sparse noise
-S_supp_idx = randsample(m*n, round(alpha*m*n), false);
-S_range = 1*mean(mean(abs(F)));
-S_temp = 2*S_range*rand(m,n)-S_range; 
-S_true = zeros(m, n);
-S_true(S_supp_idx) = S_temp(S_supp_idx);  
-F_corrupted = F + S_true;
+% F_corrupted = get_sparse_noise(F, alpha);
+% E_corrupted = get_sparse_noise(E, alpha);
+D_corrupted = get_sparse_noise(D, alpha);
+% D_corrupted = [E_corrupted F_corrupted; F_corrupted' G_corrupted];
 
-error = norm(F-F_corrupted,"fro")/norm(F,"fro");
-fprintf("Error of F after the corruption: %f\n", error);
-
-
+error = norm(D-D_corrupted,"fro")/norm(D,"fro");
+fprintf("Error of D after the corruption: %f\n", error);
 
 %% ACCALTPROJ
 para.mu        = 1.1*get_mu_kappa(F,r);  
@@ -70,19 +66,19 @@ para.trimming  = false;
 para.tol       = 1e-14;
 para.gamma     = 0.9;
 para.max_iter  = 500;
-[F_estimated, ~] = AccAltProj( F_corrupted, r, para );
+% [F_estimated, ~] = AccAltProj( F_corrupted, r, para );
+[D_estimated, ~] = AccAltProj( D_corrupted, r, para );
 
+error = norm(D-D_estimated,"fro")/norm(D,"fro");
+fprintf("Error of D after RPCA: %f\n", error);
 
-
-error = norm(F-F_estimated,"fro")/norm(F,"fro");
-fprintf("Error of F after RPCA: %f\n", error);
+% error = norm(F-F_estimated,"fro")/norm(F,"fro");
+% fprintf("Error of F after RPCA: %f\n", error);
 
 %% Gram matrix estimation and point estimation after removing noise
 
 % X_estimated = dist2gram_matrix(E, F_estimated, 0.01);
-X_estimated = dist2gram(E, F_estimated);
-% neg_eig_value = count_negative_eigenvalues(X_estimated);
-
+X_estimated = dist2gram(D_estimated);
 
 error = norm(X-X_estimated,"fro")/norm(X,"fro");
 fprintf("Error of X after the estimation: %f\n", error);
@@ -91,20 +87,20 @@ fprintf("Error of X after the estimation: %f\n", error);
 P_estimated = V*sqrt(Lam);
 
 
-% %% Gram matrix and point estimation no noise case
-% 
-% X_estimated0 = dist2gram_matrix(E, F, 0.01);
-% 
-% error = norm(X-X_estimated0,"fro")/norm(X,"fro");
-% fprintf("Error of X after the estimation (No Noise): %f\n", error);
-% 
-% [V, Lam] = eigs(X_estimated0, d, 'lm');
-% P_estimated0 = V*sqrt(Lam);
+%% Gram matrix and point estimation no noise case
+
+X_estimated0 = dist2gram_matrix(E, F, 0.01);
+
+error = norm(X-X_estimated0,"fro")/norm(X,"fro");
+fprintf("Error of X after the estimation (No Noise): %f\n", error);
+
+[V, Lam] = eigs(X_estimated0, d, 'lm');
+P_estimated0 = V*sqrt(Lam);
 
 
 %% Compute RMSE
 
-[rmse, ~, ~] = Compute_RMSE(P',P_estimated)
+rmse = Compute_RMSE(P',P_estimated)
 
 
 %% Visualization
@@ -113,3 +109,17 @@ P_estimated = V*sqrt(Lam);
 % % viz_nystrom(P_estimated0', m, 2, "Case: no noise")
 % viz_nystrom(P_estimated', m, 3, "Case: noise and after removing the noise")
 plot_points(P',P_estimated,m)
+
+
+%% Functions
+function F_corrupted = get_sparse_noise(F, alpha)
+    m = size(F, 1);
+    n = size(F, 2);
+    S_supp_idx = randsample(m*n, round(alpha*m*n/2), false);
+    S_range = 1*mean(mean(abs(F)));
+    S_temp = 2*S_range*rand(m,n)-S_range; 
+    S_true = zeros(m, n);
+    S_true(S_supp_idx) = S_temp(S_supp_idx); 
+   
+    F_corrupted = F + (S_true + S_true');
+end
