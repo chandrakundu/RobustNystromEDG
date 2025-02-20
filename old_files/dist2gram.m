@@ -82,8 +82,9 @@ function X = dist2gram_nystrom_on_gram(E,F,tol)
 
 
 
-function X_new = fix_negative_eigenvalues(X, tolerance)
+function X_new = fix_negative_eigenvalues(X, tolerance, r)
     % FIX_NEGATIVE_EIGENVALUES Adjusts small negative eigenvalues to zero and reconstructs the matrix.
+    % Ensures the rank of the matrix is at most r.
     
     if nargin < 2
         tolerance = 0; % Default tolerance
@@ -94,9 +95,16 @@ function X_new = fix_negative_eigenvalues(X, tolerance)
     % set those smaller than the tolerance to zero
     D = diag(D); 
     D(D < tolerance) = 0; 
-    D = diag(D); 
     
-    % Reconstruct
+    % Sort eigenvalues in descending order and keep the largest r
+    [D_sorted, idx] = sort(D, 'descend');
+    D_sorted(r+1:end) = 0; % Set all but the largest r eigenvalues to zero
+    
+    % Reconstruct the diagonal matrix with the largest r eigenvalues
+    D = diag(D_sorted);
+    
+    % Reconstruct the matrix with the largest r eigenvalues
+    V = V(:, idx); % Reorder eigenvectors according to sorted eigenvalues
     X_new = V * D * V';
 
     % Ensure symmetry and real values

@@ -4,7 +4,7 @@ addpath rpca\
 % protein_names = ["1ax8", "1ptq"];
 % protein_names = ["2lum", "5wov"];
 % protein_names = ["1w2e","1ubq_modified"];
-protein_names = ["1w2e","1ptq"];
+protein_names = ["1ptq"];
 
 for pn = 1:length(protein_names)
     protein_name= protein_names(pn);
@@ -106,10 +106,9 @@ function [rmse, std_dev] = run_trial_protein(PP, m, alpha, n_trials,protein_name
         para.tol       = 1e-14;
         para.gamma     = 0.9;
         para.max_iter  = 500;
-        [F_estimated, ~] = AccAltProj( F_corrupted, r, para );
-
-        % point estimation after removing noise
-        X_estimated = dist2gram(E, F_estimated);
+        
+        % Apply SREDG
+        X_estimated = SREDG(E,F_corrupted,r,@AccAltProj, para);
 
         [V, Lam] = eigs(X_estimated, d, 'lm');
         P_estimated = V*sqrt(Lam);

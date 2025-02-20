@@ -8,7 +8,7 @@ addpath rpca\
 p = 100;  % number of points
 d = 2;    % dimension of the points
 m = 20;
-alpha = 0.05; % percentage of outliers
+alpha = 0.2; % percentage of outliers
 n = p - m;
 % P = randn(d, p); 
 hs = haltonset(d, 'Skip', 1e3, 'Leap', 1e2);
@@ -59,17 +59,15 @@ para.max_iter  = 500;
 
 
 %% Apply SREDG
-X_estimated = SREDG(E,F_corrupted,r,@AccAltProj, para);
-
-
+X_estimated = SREDG_dist(E,F_corrupted,r,@AccAltProj, para);
 
 error = norm(X-X_estimated,"fro")/norm(X,"fro");
 fprintf("Error of X after the estimation: %f\n", error);
 
+
+%% Compute estimated points
 [V, Lam] = eigs(X_estimated, d, 'lm');
 P_estimated = V*sqrt(Lam);
-
-
 
 
 %% Compute RMSE
