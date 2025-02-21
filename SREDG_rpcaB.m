@@ -15,7 +15,7 @@ function X = SREDG_rpcaB(E,F,r,RPCA, para)
     [A, B] = compute_AB(E, F);
 
     % clean the distance matrix between anchor and target nodes
-    [B_hat, ~] = RPCA(B, r, para );
+    [B_hat, ~] = RPCA(B, r-2, para );
 
     % compute the Gram matrix
     C = B_hat'*pinv(A, 0.01)*B_hat;

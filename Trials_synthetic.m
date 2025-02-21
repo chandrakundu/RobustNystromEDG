@@ -4,28 +4,28 @@ addpath rpca\
 % Define parameters
 m_values = 10:10:60;
 alpha_values = 0.1:0.1:0.3;
-n_trials = 50; % Number of trials
-res_file = "results/res_synthetic_tr50_comp_F_vs_B_d3.txt";
+n_trials = 5; % Number of trials
+res_file = "results/test_res_synthetic_tr5.txt";
 
 % Initialize results matrices
 mn_new = zeros(length(m_values), length(alpha_values));
-mn_old = zeros(length(m_values), length(alpha_values));
+% mn_old = zeros(length(m_values), length(alpha_values));
 
 
 std_new = zeros(length(m_values), length(alpha_values));
-std_old = zeros(length(m_values), length(alpha_values));
+% std_old = zeros(length(m_values), length(alpha_values));
 
 
 % Run trials and store RMSE and standard deviation values
 for i = 1:length(m_values)
     for j = 1:length(alpha_values)
-        [rmse_new, rmse_old] = run_trial_synthetic(m_values(i), alpha_values(j), n_trials);
+        rmses = run_trial_synthetic(m_values(i), alpha_values(j), n_trials);
         
-        mn_new(i, j) = mean(rmse_new);
-        mn_old(i, j) = mean(rmse_old);
+        mn_new(i, j) = mean(rmses);
+        % mn_old(i, j) = mean(rmse_old);
 
-        std_new(i, j) = std(rmse_new);
-        std_old(i, j) = std(rmse_old);
+        std_new(i, j) = std(rmses);
+        % std_old(i, j) = std(rmse_old);
     end
 end
 
@@ -33,19 +33,16 @@ end
 fid = fopen(res_file, 'w');
 
 fprintf(fid, '### Comparison (num_trials = %d)\n', n_trials);
-fprintf(fid, '#### New (RPCA on B)\n');
 write_markdown_table(fid, alpha_values, m_values, mn_new, std_new);
 
-fprintf(fid, '#### Old (RPCA on F)\n');
-write_markdown_table(fid, alpha_values, m_values, mn_old, std_old);
+
 
 % Close file
 fclose(fid);
 
 %% Trials
-function [rmse_new, rmse_old] = run_trial_synthetic(m, alpha, n_trials)
-    rmse_new = zeros(n_trials, 1);
-    rmse_old = zeros(n_trials, 1);
+function rmses = run_trial_synthetic(m, alpha, n_trials)
+    rmses = zeros(n_trials, 1);
 
     for trial = 1:n_trials
         p = 500;  % number of points
@@ -71,7 +68,7 @@ function [rmse_new, rmse_old] = run_trial_synthetic(m, alpha, n_trials)
         E = D(1:m,1:m);
         F = D(1:m,m+1:end);
         G = D(m+1:end,m+1:end);
-        % EF = [E F];
+
 
 
         % RPCA params 
@@ -87,15 +84,12 @@ function [rmse_new, rmse_old] = run_trial_synthetic(m, alpha, n_trials)
 
         % only F is corrupted
         F_corrupted = get_sparse_noise(F, alpha);
-        % D_corrupted = [E F_corrupted; F_corrupted' G];
 
         % apply SREDG
-        X_estimated_new = SREDG_rpcaB(E, F_corrupted, r, @AccAltProj, para);
-        X_estimated_old = SREDG(E, F_corrupted, r, @AccAltProj, para);
+        X_estimated_new = SREDG(E, F_corrupted, r, @AccAltProj, para);
 
         % calculate RMSE
-        rmse_new(trial) = gram2rmse(X_estimated_new, P, d);
-        rmse_old(trial) = gram2rmse(X_estimated_old, P, d);
+        rmses(trial) = gram2rmse(X_estimated_new, P, d);
     end
 end
 
