@@ -3,7 +3,7 @@
 
 %% load data
 clear;
-addpath rpca\
+addpath E:\projects\edg\RobustNystromEDG\rpca\
 
 p = 100;  % number of points
 d = 2;    % dimension of the points

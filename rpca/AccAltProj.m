@@ -37,17 +37,19 @@ function [ L, S ] = AccAltProj( D, r, para )
 % HanQin Cai         , Jian-Feng Cai, Ke Wei
 % hqcai@math.ucla.edu, jfcai@ust.hk , kewei@fudan.edu.cn
 
-if exist('./rpca/PROPACK', 'dir')==7
-    addpath rpca/PROPACK;
-    propack_exist = true;
-else
-    propack_exist = false;
-    disp("PROPACK is not correctly installed, this may slow down the initialisation step.");
-    disp("If you wish to continue anyway, press any key.");
-    disp("If you are using Linux/Mac and have PROPACK installed but still seeing this message,");
-    disp("you should replace line 40-50 to be 'propack_exist = true;'.");
-    pause;
-end
+% if exist('./rpca/PROPACK', 'dir')==7
+%     addpath E:\projects\edg\RobustNystromEDG\rpca\PROPACK\;
+%     propack_exist = true;
+% else
+%     propack_exist = false;
+%     disp("PROPACK is not correctly installed, this may slow down the initialisation step.");
+%     disp("If you wish to continue anyway, press any key.");
+%     disp("If you are using Linux/Mac and have PROPACK installed but still seeing this message,");
+%     disp("you should replace line 40-50 to be 'propack_exist = true;'.");
+%     pause;
+% end
+addpath E:\projects\edg\RobustNystromEDG\rpca\PROPACK\
+propack_exist = true;
 
 [m,n]     = size(D);
 norm_of_D = norm(D, 'fro'); 

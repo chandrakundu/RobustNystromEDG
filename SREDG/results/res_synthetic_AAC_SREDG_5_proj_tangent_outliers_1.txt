@@ -1,0 +1,11 @@
+### Comparison (num_trials = 10)
+#### New (AAP_SREDG after projecting tangent space)
+| m \ alpha | 0.20 |
+|---|---|
+| 30 | 0.2773 (0.88) (9) |
+
+#### Old (RPCA on F)
+| m \ alpha | 0.20 |
+|---|---|
+| 30 | 1.6908 (0.32) (0) |
+
