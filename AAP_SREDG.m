@@ -1,4 +1,4 @@
-function [Lk, time_counter] = AAP_SREDG(E, F, L_star, X_star, r, known_row_F, known_row_id, zeta0, gamma, maxIter, show_output)
+function [Lk, Xk, time_counter] = AAP_SREDG(E, F, L_star, X_star, r, known_row_F, known_row_id, zeta0, gamma, max_iter, tol, show_output)
     % SREDG_AAP  Robust EDG  via Accelerated Alternating Projections.
     %
     %
@@ -20,16 +20,22 @@ function [Lk, time_counter] = AAP_SREDG(E, F, L_star, X_star, r, known_row_F, kn
     %       Sk       - final outlier matrix (n x n)
     %       Xk       - points. factor of Lk, i.e. Lk ~= Xk * Xk', up to rounding    %
 
-    if nargin < 11
+    if nargin < 12
         show_output = 0;
     end
-    time_counter = 0;     
+    if nargin < 11
+        tol = 1e-8;
+    end
+
+    err = -1*ones(max_iter,1);
+    timer = -1*ones(max_iter,1);
+
     
     % 2) Initialization
     % Hard threshold to find initial outliers
     % S0 = T_hardThreshold(F, zeta0);
 
-    tstart = tic;
+    tic;
     S0 = T_hardThreshold(F,zeta0);
     
     % Compute initial L^1
@@ -37,17 +43,16 @@ function [Lk, time_counter] = AAP_SREDG(E, F, L_star, X_star, r, known_row_F, kn
     B0 = operatorB(E,Fk);           
     Bk = projHr(B0, r);
 
-    tEnd = toc(tstart);
-    time_counter = time_counter + tEnd;
+    init_timer = toc;    
     
-    
-    if show_output == 1
-        display_error(L_star, X_star, Bk, E, r, 0, time_counter);
+    if show_output == 2
+        [Lk, Xk] = get_current_estimates(Bk, E, r);
+        display_error(L_star, X_star, Lk, Xk, 0, init_timer, false);
     end
     
     % 3) Main Loop
-    for k = 1:maxIter
-        tstart = tic;
+    for k = 1:max_iter
+        tic;
         % Update threshold
         % [Uk, Sigma, Vk] = svd(Bk,'econ');
         % zeta_k = zeta0 * (Sigma(r+1,r+1) + (gamma^k)*Sigma(1,1));
@@ -70,44 +75,57 @@ function [Lk, time_counter] = AAP_SREDG(E, F, L_star, X_star, r, known_row_F, kn
         [Uk, ~, Vk] = svds(Bk, r);       
         Bk_new = projTangent(Bk_new, Uk, Vk);
         %   Then keep top-r 
-        Bk_new = projHr(Bk_new, r); 
-
-        Bk = Bk_new;
+        Bk_new = projHr(Bk_new, r);        
 
 
-        tEnd = toc(tstart); 
-        time_counter = time_counter + tEnd;
+        timer(k) = toc;
+        % % Check convergence
+        % err(k) = norm(Bk - Bk_new, 'fro') / norm(Bk, 'fro');
+
+        
+
+        % fprintf('Iteration %d; error: %e; time: %f \n', k, err(k), timer(k));
+
+        % if err(k) < tol
+        %     break;
+        % end
+
+        Bk = Bk_new;       
         
         % display error
-        if show_output == 1
-            display_error(L_star, X_star, Bk, E, r, k, time_counter);
+        if show_output == 2
+            [Lk, Xk] = get_current_estimates(Bk, E, r);
+            display_error(L_star, X_star, Lk, Xk, k, timer(k), false);
         end        
     end
+    time_counter = sum(timer(timer>0)) + init_timer;
     if show_output >= 1
-        Lk = display_error(L_star, X_star, Bk, E, r, k, time_counter);
+        [Lk, Xk] = get_current_estimates(Bk, E, r);
+        display_error(L_star, X_star, Lk, Xk, k, time_counter, true);
+    end 
+    if show_output == 0
+        % Final output
+        [Lk, Xk] = get_current_estimates(Bk, E, r);
     end 
 end
     
     %% =============== Helper Subfunctions ===============
 
-    function Lk = display_error(L_star, X_star, Bk, E, r, iteration, time_counter)
-        % display_error:  Display the error between the ground truth and the estimated Gram matrix and points
-        %
-        % Inputs:
-        % L_star: (m+n) x (m+n) matrix, the ground truth Gram matrix
-        % X_star: (m+n) x d matrix, the ground truth points
-        % Bk: m x n matrix, the estimated B matrix
-        % E: m x m matrix, the distance matrix of anchor nodes
-        % r: integer, the rank of the Gram matrix
-       
-
+    function [Lk, Xk] = get_current_estimates(Bk, E, r)
         Lk = EB_to_gram(E, Bk);
         Xk = gram_to_points(Lk, r);
         Xk_centered = Xk - mean(Xk, 1);
-        Lk = Xk_centered*Xk_centered';    
-        error_gram = norm(L_star - Lk, 'fro') / max(1, norm(L_star,'fro'));
+        Lk = Xk_centered*Xk_centered';
+    end
+
+    function display_error(L_star, X_star, Lk, Xk, iteration, time_counter, final_error)
+        error_gram = norm(L_star - Lk, 'fro') / norm(L_star,'fro');
         error_points = Compute_RMSE(X_star', Xk);
-        fprintf('SREDG_AAP: Iteration %d: \t Gram error: %e; \t Points RMSE: %e; \t Time: %f\n', iteration, error_gram, error_points, time_counter);
+        if final_error
+            fprintf('SREDG_AAP: Iteration %d; Gram error: %e; Points RMSE: %e;  Total Time: %f\n', iteration, error_gram, error_points, time_counter);
+        else
+            fprintf('Iteration %d; Gram error: %e; Points RMSE: %e; Time: %f\n', iteration, error_gram, error_points, time_counter);
+        end
     end
     
     function Zthr = T_hardThreshold(Z, zeta)
@@ -158,9 +176,11 @@ end
     function Xmat = gram_to_points(L, r)
     % formXfromL: from a PSD matrix L (rank <= r), extract X s.t. L ~= X X'
     % For simplicity, do a partial eigen-decomposition:
-        [Utmp, Dtmp] = eigs(L, r, 'largestreal', 'Tolerance',1e-7);
-        dvals = max(diag(Dtmp), 0); % clip negative
-        Xmat  = Utmp*diag(sqrt(dvals));
+        % [Utmp, Dtmp] = eigs(L, r, 'largestreal', 'Tolerance',1e-7);
+        % dvals = max(diag(Dtmp), 0); % clip negative
+        % Xmat  = Utmp*diag(sqrt(dvals));
+        [V, Lam] = eigs(L, r, 'lm');
+        Xmat = V*sqrt(Lam);
     end
     
 

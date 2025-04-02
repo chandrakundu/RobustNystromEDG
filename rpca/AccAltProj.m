@@ -62,54 +62,37 @@ beta_init = 4*beta;
 gamma     = 0.7;    
 mu        = 5;     
 trimming  = false;
+show_output = 2;
 
 
 if isfield(para,'beta_init') 
     beta_init = para.beta_init; 
-    fprintf('beta_init = %f set.\n', beta_init);
-else
-    fprintf('using default beta_init = %f.\n', beta_init);
 end
 if isfield(para,'beta') 
     beta = para.beta; 
-    fprintf('beta = %f set.\n', beta);
-else
-    fprintf('using default beta = %f.\n', beta);
 end
 if isfield(para,'gamma') 
     gamma = para.gamma; 
-    fprintf('gamma = %f set.\n', tol);
-else
-    fprintf('using default gamma = %f.\n', gamma);
 end
 if isfield(para,'mu') 
     mu = para.mu; 
-    fprintf('mu = [%f,%f] set.\n', mu(1), mu(end));
-else
-    fprintf('using default mu = [%f,%f].\n', mu, mu);
 end
 if isfield(para,'trimming') 
     trimming = para.trimming; 
-    if  trimming
-        fprintf('trimming = true set.\n');
-    else 
-        fprintf('trimming = false set.\n');
-    end
-else
-    fprintf('using default trimming = False.\n');
 end
 if isfield(para,'max_iter')   
     max_iter = para.max_iter; 
-    fprintf('max_iter = %d set.\n', max_iter);
-else
-    fprintf('using default max_iter = %d.\n', max_iter);
 end
 if isfield(para,'tol')        
     tol= para.tol; 
-    fprintf('tol = %e set.\n', tol);
-else
-    fprintf('using default tol = %e.\n', tol);
 end 
+if isfield(para,'show_output') 
+    show_output = para.show_output; 
+end
+
+if show_output == 2
+    fprintf('beta_init = %f, beta = %f, gamma = %f, mu = [%f,%f], max_iter = %d, tol = %e\n', beta_init, beta, gamma, mu(1), mu(end), max_iter, tol);
+end
 
 err    = -1*ones(max_iter,1);
 timer  = -1*ones(max_iter,1);
@@ -118,8 +101,8 @@ tic;
 %%Initilization 
 if propack_exist
     zeta = beta_init * lansvd(D,1); % lansvd(D,1) is the same as svds(D,1) and it provides the largest singular value of D
-else
-    zeta = beta_init * svds(D,1);
+% else
+%     zeta = beta_init * svds(D,1);
 end
 % When S is sparse enough, we may store S as a sparse matrix. This can save
 % some memory and computing when problem size is large.
@@ -127,8 +110,8 @@ S = wthresh( D ,'h',zeta);
 
 if propack_exist
     [U,Sigma,V] = lansvd(D - S, r, 'L');
-else
-    [U,Sigma,V] = svds(D - S, r);
+% else
+%     [U,Sigma,V] = svds(D - S, r);
 end
 
 L = U * Sigma * V';
@@ -138,7 +121,10 @@ S = wthresh( D - L ,'h',zeta);
 
 init_timer = toc;
 init_err = norm(D-L-S,'fro')/norm_of_D;
-fprintf('Init: error: %e, timer: %f \n', init_err, init_timer);
+if show_output == 2
+    fprintf('Initialization: error: %e, timer: %f \n', init_err, init_timer);
+end
+
 
 
 %% Main Alogorithm
@@ -171,10 +157,14 @@ for t = 1 : max_iter
     err(t) = norm (D - L - S,'fro')/norm_of_D;
     timer(t) = toc;
     if err(t) < tol  
-        fprintf('Total %d iteration, final error: %e, total time without init: %f , with init: %f\n======================================\n', t, err(t), sum(timer(timer>0)),sum(timer(timer>0))+init_timer);
+        if show_output >= 1
+            fprintf('RPCA: Total %d iteration, final error: %e, total time without init: %f , with init: %f\n', t, err(t), sum(timer(timer>0)),sum(timer(timer>0))+init_timer);
+        end
         return;
     else
-        fprintf('Iteration %d: error: %e, timer: %f \n', t, err(t), timer(t));
+        if show_output == 2
+            fprintf('Iteration %d, error: %e, time: %f \n', t, err(t), timer(t));
+        end
     end
 end
 

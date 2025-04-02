@@ -1,0 +1,11 @@
+### Comparison (num_trials = 10)
+#### Method: AAP_SREDG 
+| m \ alpha | 0.10 |
+|---|---|
+| 20 | 5.123 (3.51) (2) |
+
+#### Method: SREDG (RPCA on F)
+| m \ alpha | 0.10 |
+|---|---|
+| 20 | 2.705 (1.96) (2) |
+

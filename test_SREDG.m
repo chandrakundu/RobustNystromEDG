@@ -4,6 +4,7 @@
 %% load data
 clear; clc;
 addpath LIB\
+addpath rpca\
 
 p = 100;  % number of points
 d = 2;    % dimension of the points
@@ -34,15 +35,19 @@ G = D(m+1:end,m+1:end);
 F_corrupted = get_sparse_noise(F, alpha); % added sparse noise
 
 
-%% Apply AAP_SREDG
-known_row_id = m;
-known_row_F = F(known_row_id,:);  
-tol = 1e-18;
-zeta0 = 1 * max(F(:));
-gamma = 0.9;
-max_iter = 100;
-show_output = 1;
-[X_estimated, P_estimated, ~] = AAP_SREDG(E, F_corrupted, X, P, d, known_row_F, known_row_id, zeta0, gamma, max_iter, tol, show_output);
+%% ROBUST PCA Params
+para.mu        = 1.1*get_mu_kappa(F,r);  
+para.beta_init = r*sqrt(para.mu(1)*para.mu(end))/(sqrt(m*n));
+para.beta      = r*sqrt(para.mu(1)*para.mu(end))/(4*sqrt(m*n));
+para.trimming  = false;
+para.tol       = 1e-14;
+para.gamma     = 0.9;
+para.max_iter  = 500;
+para.show_output = 2;
+
+
+%% Apply SREDG
+[X_estimated, P_estimated, ~ ] = SREDG(E,F_corrupted,r,@AccAltProj, para);
 
 
 %% Compute RMSE

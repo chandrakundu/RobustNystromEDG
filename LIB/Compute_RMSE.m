@@ -23,6 +23,6 @@ if show_plot
 end
 
 RMSE = sqrt(mean(sum((pt2 - Pt1).^2,2)));
-fprintf('RMSE: %f \n', RMSE);
+% fprintf('RMSE: %f \n', RMSE);
 
 end
