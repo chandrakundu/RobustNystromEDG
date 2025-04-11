@@ -4,14 +4,19 @@
 %% load data
 clear; clc;
 addpath LIB\
+addpath rpca\
 
-p = 100;  % number of points
+p = 500;  % number of points
 d = 2;    % dimension of the points
-m = 35;   % number of anchors, here minimum m = round(4*(d+2)*log(p));
+m = 30;   % number of anchors, here minimum m = round(4*(d+2)*log(p));
 
-alpha = 0.1; % percentage of outliers
+alpha = 0.2; % percentage of outliers
 n = p - m; % number of sensors
 
+% s = rng('shuffle');
+% sd = 183252468;alpha=0.3;m=20;p=500;d=3; % very  bad problem seed
+% sd = 'shuffle';
+% s = rng(sd);
 P1 = -100+200.*rand(d,m); 
 P2 = -100+200.*rand(d,n); 
 
@@ -37,12 +42,13 @@ F_corrupted = get_sparse_noise(F, alpha); % added sparse noise
 %% Apply AAP_SREDG
 known_row_id = m;
 known_row_F = F(known_row_id,:);  
-tol = 1e-18;
+tol = 1e-14;
 zeta0 = 1 * max(F(:));
 gamma = 0.9;
-max_iter = 100;
-show_output = 1;
-[X_estimated, P_estimated, ~] = AAP_SREDG(E, F_corrupted, X, P, d, known_row_F, known_row_id, zeta0, gamma, max_iter, tol, show_output);
+max_iter = 50;
+show_output = 2;
+[X_estimated, P_estimated, ~] = SREDG_AAP(E, F_corrupted, F, X, P, d, known_row_F, known_row_id, zeta0, gamma, max_iter, tol, show_output);
+% [X_estimated, P_estimated, ~] = AAP_SREDGRPCA(E, F_corrupted, X, P, d, known_row_F, known_row_id, zeta0, gamma, max_iter, tol, show_output);
 
 
 %% Compute RMSE
@@ -53,7 +59,7 @@ fprintf('================================\n');
 
 
 %% Visualization
-% plot_points(P',P_estimated,m)
+plot_points(P',P_estimated,m)
 
 
 

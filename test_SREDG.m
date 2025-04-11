@@ -6,11 +6,11 @@ clear; clc;
 addpath LIB\
 addpath rpca\
 
-p = 100;  % number of points
+p = 500;  % number of points
 d = 2;    % dimension of the points
-m = 35;   % number of anchors, here minimum m = round(4*(d+2)*log(p));
+m = 30;   % number of anchors, here minimum m = round(4*(d+2)*log(p));
 
-alpha = 0.1; % percentage of outliers
+alpha = 0.4; % percentage of outliers
 n = p - m; % number of sensors
 
 P1 = -100+200.*rand(d,m); 
@@ -58,7 +58,7 @@ fprintf('================================\n');
 
 
 %% Visualization
-% plot_points(P',P_estimated,m)
+plot_points(P',P_estimated,m)
 
 
 

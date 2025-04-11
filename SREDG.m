@@ -88,8 +88,7 @@ function X_new = fix_gram_matrix(X, tolerance)
     X_new = real(X_new);
 end
 
-
-function Xmat = gram_to_points(L, r)    
-        [V, Lam] = eigs(L, r, 'lm');
-        Xmat = V*sqrt(Lam);
-    end
+function P = gram_to_points(X, d)
+    [V, Lam] = eigs(X, d, 'lm');
+    P = V * sqrt(Lam);
+end

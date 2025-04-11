@@ -6,7 +6,7 @@ addpath LIB\
 m_values = 10:5:50;
 alpha_values = 0.1:0.05:0.3;
 n_trials = 50; % Number of trials
-res_file = "sredg_aap_results/comp_res_init.txt";
+res_file = "sredg_aap_results/comp_res_init_v9.txt";
 recovery_threshold = 1e-4; % Recovery threshold for RMSE
 
 % Initialize results matrices
@@ -44,6 +44,10 @@ fid = fopen(res_file, 'w');
 
 fprintf(fid, '### Comparison (num_trials = %d)\n', n_trials);
 fprintf(fid, '#### Method: AAP_SREDG \n');
+fprintf(fid, '**Changes:** First RPCA on F to initialize F. RPCA tol 1e-14, AAP tol 1e-14 \n ```matlab \n');
+fprintf(fid, 'factor_initial = 20; factor_final = 5;   \n');
+fprintf(fid, 'MAD and linear decay  \n  zeta_k = factor * mad(abs(Rk(:)));  \n');
+fprintf(fid, '```\n no projection on Bk \n \n');
 write_markdown_table(fid, alpha_values, m_values, mn_new, std_new, recovered_new);
 
 fprintf(fid, '#### Method: SREDG (RPCA on F)\n');
@@ -58,7 +62,7 @@ function [rmse_new, rmse_old] = run_trial_synthetic(m, alpha, n_trials)
     rmse_old = zeros(n_trials, 1);
 
     for trial = 1:n_trials
-        p = 500;  % number of points
+        p = 300;  % number of points
         d = 3;    % dimension of the points
         n = p - m;
 
@@ -86,12 +90,12 @@ function [rmse_new, rmse_old] = run_trial_synthetic(m, alpha, n_trials)
         % apply AAP_SREDG
         known_row_id = m;
         known_row_F = F(known_row_id,:);  
-        tol = 1e-18; 
+        tol = 1e-14; 
         zeta0 = 1 * max(F(:));
         gamma = 0.9;
         max_iter = 500;
         show_output = 1;
-        [~, P_estimated_1, ~] = AAP_SREDG(E, F_corrupted, X, P, d, known_row_F, known_row_id, zeta0, gamma, max_iter, tol,show_output);
+        [~, P_estimated_1, ~] = AAP_SREDGRPCA(E, F_corrupted, X, P, d, known_row_F, known_row_id, zeta0, gamma, max_iter, tol,show_output);
 
 
 

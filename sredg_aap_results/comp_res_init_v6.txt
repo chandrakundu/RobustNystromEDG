@@ -1,0 +1,19 @@
+### Comparison (num_trials = 30)
+#### Method: AAP_SREDG 
+**Changes:** First RPCA on F to initialize F. RPCA tol 1e-14, AAP tol 1e-14 
+ ```matlab 
+factor_initial = 10; factor_final = 3; lambda = log(factor_initial/factor_final) / (max_iter - 1);  
+factor = factor_initial * exp(-lambda*(k-1)); 
+  zeta_k = factor * median(abs(Rk(:)));  
+```
+ no projection on Bk 
+ 
+| m \ alpha | 0.30 |
+|---|---|
+| 20 | 268.356 (830.50) (0) |
+
+#### Method: SREDG (RPCA on F)
+| m \ alpha | 0.30 |
+|---|---|
+| 20 | 16.790 (2.12) (0) |
+

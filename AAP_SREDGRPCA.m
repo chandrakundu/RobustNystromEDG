@@ -1,4 +1,4 @@
-function [Lk, Xk, time_counter] = AAP_SREDG(E, F_corrupted, F_star, L_star, X_star, r, known_row_F, known_row_id, zeta0, gamma, max_iter, tol, show_output)
+function [Lk, Xk, time_counter] = AAP_SREDGRPCA(E, F, L_star, X_star, r, known_row_F, known_row_id, zeta0, gamma, max_iter, tol, show_output)
     % SREDG_AAP  Robust EDG  via Accelerated Alternating Projections.
     %
     %
@@ -20,12 +20,12 @@ function [Lk, Xk, time_counter] = AAP_SREDG(E, F_corrupted, F_star, L_star, X_st
     %       Sk       - final outlier matrix (n x n)
     %       Xk       - points. factor of Lk, i.e. Lk ~= Xk * Xk', up to rounding    %
 
-    % if nargin < 12
-    %     show_output = 0;
-    % end
-    % if nargin < 11
-    %     tol = 1e-8;
-    % end
+    if nargin < 12
+        show_output = 0;
+    end
+    if nargin < 11
+        tol = 1e-8;
+    end
 
     err = -1*ones(max_iter,1);
     timer = -1*ones(max_iter,1);
@@ -36,10 +36,21 @@ function [Lk, Xk, time_counter] = AAP_SREDG(E, F_corrupted, F_star, L_star, X_st
     % S0 = T_hardThreshold(F, zeta0);
 
     tic;
-    S0 = T_hardThreshold(F_corrupted,zeta0);
+    m = size(E, 1);
+    n = size(F, 2);
+    para.mu        = 1.1*get_mu_kappa(F,r);  
+    para.beta_init = r*sqrt(para.mu(1)*para.mu(end))/(sqrt(m*n));
+    para.beta      = r*sqrt(para.mu(1)*para.mu(end))/(4*sqrt(m*n));
+    para.trimming  = false;
+    para.tol       = 1e-10;
+    para.gamma     = 0.9;
+    para.max_iter  = 500;
+    para.show_output = 0;
+    [Fk, ~] = AccAltProj(F, r+2, para );
+
     
     % Compute initial L^1
-    Fk = F_corrupted - S0;
+    % Fk = F - S0;
     B0 = operatorB(E,Fk);           
     Bk = projHr(B0, r);
 
@@ -50,8 +61,10 @@ function [Lk, Xk, time_counter] = AAP_SREDG(E, F_corrupted, F_star, L_star, X_st
         display_error(L_star, X_star, Lk, Xk, 0, init_timer, false);
     end
 
-    factor_initial = 10;
-    factor_final   = 3;
+    factor_initial = 20;
+    factor_final   = 5;
+    % prev_median = NaN; 
+    lambda = log(factor_initial/factor_final) / (max_iter - 1); % parameter for exponential decay
     
     % 3) Main Loop
     for k = 1:max_iter
@@ -64,23 +77,30 @@ function [Lk, Xk, time_counter] = AAP_SREDG(E, F_corrupted, F_star, L_star, X_st
 
         % applying operator A: B -> F
         Fk = operatorA(Bk, E, known_row_F, known_row_id);   
-        Rk = F_corrupted - Fk; 
+        Rk = F - Fk; 
 
         
         % zeta0 = zeta0 * 0.1;
-        zeta_k = zeta0 * (gamma^(k));
+        % zeta_k = zeta0 * (gamma^(k));
 
         % addaptive thresholding
-        % factor = 10 * (gamma^(k-1)); % 0.5 for 1st iteration, 0.25 for 2nd, etc.
-        % factor = factor_initial - (factor_initial - factor_final) * (k-1) / (max_iter-1);
-        % zeta_k = factor * median(abs(Rk(:)));
-        % fprintf('%.2f, %.2f \t', max(abs(Rk(:))),median(abs(Rk(:))));
+        current_mad = mad(abs(Rk(:)),1);
+        current_factor = factor_initial - (factor_initial - factor_final) * (k-1) / (max_iter-1); % linear decay 
+        % current_factor = factor_initial * exp(-lambda*(k-1)); % exponential decay
+        % if ~isnan(prev_median) && current_median > 1.1 * prev_median
+        %     current_factor = 2*prev_factor; 
+        % end
+        zeta_k = current_factor * current_mad; 
+        % prev_median = current_median;
+        % prev_factor = current_factor;
+
+        
 
 
         Sk_new = T_hardThreshold(Rk, zeta_k);
         
         % applying operator B: F -> B 
-        Fk = F_corrupted - Sk_new;
+        Fk = F - Sk_new;
         Bk_new = operatorB(E, Fk);
         
         %   Project onto tangent space at Bk
@@ -95,14 +115,18 @@ function [Lk, Xk, time_counter] = AAP_SREDG(E, F_corrupted, F_star, L_star, X_st
 
         if show_output == 3
             err_Bk = norm(Bk - Bk_new, 'fro') / norm(Bk, 'fro');
-            err_Fk = norm(Fk - F_star, 'fro') / norm(F_star, 'fro');
+            err_Fk = norm(Fk - F, 'fro') / norm(F, 'fro');
             [Lk, Xk] = get_current_estimates(Bk_new, E, r);
             error_gram = norm(L_star - Lk, 'fro') / norm(L_star,'fro');
             error_points = Compute_RMSE(X_star', Xk);
+            fprintf('max_Rk: %.2f, med_Rk: %e \t', max(abs(Rk(:))),median(abs(Rk(:))));
             fprintf('i=%d; err_Bk: %e; err_Fk: %e; Gram error: %e; Points RMSE: %e; time: %f \n', k, err_Bk, err_Fk, error_gram, error_points, timer(k));
         end
-        % % Check convergence
-        % err(k) = norm(Bk - Bk_new, 'fro') / norm(Bk, 'fro');
+        % Check convergence
+        err(k) = norm(Bk - Bk_new, 'fro') / norm(Bk, 'fro');
+        if err(k) < tol
+            break;
+        end
 
         
 
