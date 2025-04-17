@@ -7,7 +7,7 @@ addpath LIB\
 addpath rpca\
 
 p = 500;  % number of points
-d = 2;    % dimension of the points
+d = 3;    % dimension of the points
 m = 30;   % number of anchors, here minimum m = round(4*(d+2)*log(p));
 
 alpha = 0.2; % percentage of outliers
@@ -46,8 +46,9 @@ tol = 1e-14;
 zeta0 = 1 * max(F(:));
 gamma = 0.9;
 max_iter = 50;
+accelerated = true; 
 show_output = 2;
-[X_estimated, P_estimated, ~] = SREDG_AAP(E, F_corrupted, F, X, P, d, known_row_F, known_row_id, zeta0, gamma, max_iter, tol, show_output);
+[X_estimated, P_estimated, ~] = SREDG_AAP_EXP(E, F_corrupted, F, X, P, d, known_row_F, known_row_id, zeta0, gamma, accelerated, max_iter, tol, show_output);
 % [X_estimated, P_estimated, ~] = AAP_SREDGRPCA(E, F_corrupted, X, P, d, known_row_F, known_row_id, zeta0, gamma, max_iter, tol, show_output);
 
 
@@ -59,7 +60,7 @@ fprintf('================================\n');
 
 
 %% Visualization
-plot_points(P',P_estimated,m)
+% plot_points(P',P_estimated,m)
 
 
 

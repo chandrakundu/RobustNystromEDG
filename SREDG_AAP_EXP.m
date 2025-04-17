@@ -1,4 +1,5 @@
-function [X_estimated, P_estimated, time_counter] = SREDG_AAP(E, F_corrupted, F_star, X_star, P_star, d, known_row_F, known_row_id, zeta0, gamma, accelerated, max_iter, tol, show_output)
+%% SREDG_AAP initialization test
+function [X_estimated, P_estimated, time_counter] = SREDG_AAP_test(E, F_corrupted, F_star, X_star, P_star, d, known_row_F, known_row_id, zeta0, gamma, accelerated, max_iter, tol, show_output)
 
     % SREDG_AAP:  
     % Input:
@@ -18,12 +19,24 @@ function [X_estimated, P_estimated, time_counter] = SREDG_AAP(E, F_corrupted, F_
 
     % Initialization
     tic;
-    S0 = hard_thresholding(F_corrupted, zeta0); % hard thresholding
-    Fk = F_corrupted - S0; 
+    % S0 = hard_thresholding(F_corrupted, zeta0); % hard thresholding
+    % Fk = F_corrupted - S0; 
+   
+    % New initialization using true value with added Gaussian noise
+    noise_level = 1e-7; % Small controllable Gaussian noise level
+    S0 = zeros(size(F_corrupted)); % Sparse noise initialization
+    Fk = F_star + noise_level * randn(size(F_star)); % Perturbed true value
+
+
     B0 = operatorB(E, Fk); 
     Bk = projHr(B0, d);  
-
     init_timer = toc(tic);
+
+    % init errors 
+    err_F0 = norm(F_star - Fk, 'fro') / norm(F_star, 'fro');
+    err_B0 = norm(B0 - Bk, 'fro') / norm(B0, 'fro');
+    fprintf('Initial errors: err_F0 = %0.4e, err_B0 = %0.4e\n', err_F0, err_B0);
+
 
     for k = 1:max_iter
         tic;
@@ -73,6 +86,7 @@ function [X_estimated, P_estimated, time_counter] = SREDG_AAP(E, F_corrupted, F_
         fprintf('SREDG_AAP: i=%d, error_gram = %.4f, rmse_points = %.4f, time = %f seconds\n', k, error_gram, rmse_points, time_counter);
     end
 end
+
 
 
 function F = operatorA(B, E, known_row_F, k)

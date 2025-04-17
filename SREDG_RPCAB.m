@@ -1,4 +1,4 @@
-function [X,P,time_counter] = SREDG(E,F,r,RPCA, para, nyston)
+function [X,P,time_counter] = SREDG_RPCAB(E,F,r,RPCA, para, nyston)
     % SREDG Sparse Robust Euclidean Distance Geometry algorithm for distance matrix completion
     %
     % Input:
@@ -25,14 +25,29 @@ function [X,P,time_counter] = SREDG(E,F,r,RPCA, para, nyston)
     time_counter = 0;
     tstart = tic;
     [F_hat, ~] = RPCA(F, r, para );
+    % F_hat = F;
 
     if nyston == "gram"    
         % compute A and B
         [A, B] = compute_AB(E, F_hat);
 
+        m = size(E, 1);
+        n = size(F, 2);
+        d = r - 2; 
+
+        para.mu        = para.muB;
+        para.beta_init = d*sqrt(para.mu(1)*para.mu(end))/(sqrt(m*n));
+        para.beta      = d*sqrt(para.mu(1)*para.mu(end))/(4*sqrt(m*n));
+
+        [B_hat, SB] = RPCA(B, d, para); % RPCA on B block
+        Bcor = (1/m) * ones(m,1) * (ones(1,m) * SB);
+        B_hat = B_hat + Bcor; % add the mean back to B_hat
+        % disp(max(SB(:)));
+        
+
         % compute the Gram matrix
-        C = B'*pinv(A, 0.01)*B;
-        X = [A B; B' C];
+        C = B_hat'*pinv(A, 0.01)*B_hat;
+        X = [A B_hat; B_hat' C];
     else
         G = F_hat'*pinv(E, 0.01)*F_hat; 
         D_est = [E F_hat; F_hat' G]; % corrupted distance matrix

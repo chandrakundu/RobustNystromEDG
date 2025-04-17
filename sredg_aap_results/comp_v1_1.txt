@@ -1,0 +1,11 @@
+### Comparison (num_trials = 50)
+#### Method: SREDG_AAP (nyst on gram)
+| m \ alpha | 0.20 |
+|---|---|
+| 30 | 4.948 (4.03) (8) |
+
+#### Method: SREDG (rpca and nyst on gram)
+| m \ alpha | 0.20 |
+|---|---|
+| 30 | 1.240 (1.11) (15) |
+

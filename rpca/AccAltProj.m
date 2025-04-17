@@ -90,6 +90,10 @@ if isfield(para,'show_output')
     show_output = para.show_output; 
 end
 
+if isfield(para,'F_star') 
+    F_star = para.F_star; 
+end
+
 if show_output == 2
     fprintf('beta_init = %f, beta = %f, gamma = %f, mu = [%f,%f], max_iter = %d, tol = %e\n', beta_init, beta, gamma, mu(1), mu(end), max_iter, tol);
 end
@@ -123,6 +127,11 @@ init_timer = toc;
 init_err = norm(D-L-S,'fro')/norm_of_D;
 if show_output == 2
     fprintf('Initialization: error: %e, timer: %f \n', init_err, init_timer);
+end
+
+if isfield(para,'F_star') 
+    errFkFstar = norm(F_star - L, 'fro') / norm(F_star, 'fro');
+    fprintf('Initialization: error of F vs F_star: %e \n', errFkFstar);
 end
 
 

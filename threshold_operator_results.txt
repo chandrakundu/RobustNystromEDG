@@ -1,0 +1,74 @@
+Thresholding Method Results for m = 30, alpha = 0.20 over 50 trials
+
+Method: hard
+Parameters: {"tau":0.005}
+Mean RMSE: 2.843
+Median RMSE: 2.831
+Std RMSE: 0.1733
+Recovered (RMSE < 1e-1): 0/50
+------------------------------------------
+
+Method: soft
+Parameters: {"tau":0.005}
+Mean RMSE: 2.825
+Median RMSE: 2.784
+Std RMSE: 0.1931
+Recovered (RMSE < 1e-1): 0/50
+------------------------------------------
+
+Method: percentile
+Parameters: {"perc":5}
+Mean RMSE: 11.59
+Median RMSE: 11.45
+Std RMSE: 1.308
+Recovered (RMSE < 1e-1): 0/50
+------------------------------------------
+
+Method: weight_decay
+Parameters: {"tau0":0.005,"gamma":0.9}
+Mean RMSE: 2.794
+Median RMSE: 2.783
+Std RMSE: 0.1787
+Recovered (RMSE < 1e-1): 0/50
+------------------------------------------
+
+Method: weight_decay
+Parameters: {"tau0":0.01,"gamma":0.9}
+Mean RMSE: 2.836
+Median RMSE: 2.852
+Std RMSE: 0.1661
+Recovered (RMSE < 1e-1): 0/50
+------------------------------------------
+
+Method: weight_decay
+Parameters: {"tau0":0.02,"gamma":0.9}
+Mean RMSE: 2.865
+Median RMSE: 2.828
+Std RMSE: 0.1932
+Recovered (RMSE < 1e-1): 0/50
+------------------------------------------
+
+Method: mad
+Parameters: {"multiplier":3}
+Mean RMSE: 1.43
+Median RMSE: 1.432
+Std RMSE: 0.2098
+Recovered (RMSE < 1e-1): 0/50
+------------------------------------------
+
+Method: row_percentile
+Parameters: {"perc":5}
+Mean RMSE: 23.8
+Median RMSE: 11.33
+Std RMSE: 39.35
+Recovered (RMSE < 1e-1): 0/50
+------------------------------------------
+
+Method: iter_reweighted_soft
+Parameters: {"tau":0.005}
+Mean RMSE: 2.855
+Median RMSE: 2.842
+Std RMSE: 0.1734
+Recovered (RMSE < 1e-1): 0/50
+------------------------------------------
+

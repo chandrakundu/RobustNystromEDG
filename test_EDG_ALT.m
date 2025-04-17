@@ -10,7 +10,7 @@ p = 500;  % number of points
 d = 2;    % dimension of the points
 m = 30;   % number of anchors, here minimum m = round(4*(d+2)*log(p));
 
-alpha = 0.2; % percentage of outliers
+alpha = 0.1; % percentage of outliers
 n = p - m; % number of sensors
 
 P1 = -100+200.*rand(d,m); 
@@ -35,20 +35,12 @@ G = D(m+1:end,m+1:end);
 F_corrupted = get_sparse_noise(F, alpha); % added sparse noise
 
 
-%% ROBUST PCA Params
-para.mu        = 1.1*get_mu_kappa(F,r);  
-para.beta_init = r*sqrt(para.mu(1)*para.mu(end))/(sqrt(m*n));
-para.beta      = r*sqrt(para.mu(1)*para.mu(end))/(4*sqrt(m*n));
-para.trimming  = false;
-para.tol       = 1e-14;
-para.gamma     = 0.9;
-para.max_iter  = 500;
-para.show_output = 2;
-para.muB        = 1.1*get_mu_kappa(F,r);  
 
 %% Apply SREDG
-[X_estimated, P_estimated, ~ ] = SREDG_RPCAB(E,F_corrupted,r,@AccAltProj, para);
-
+para.r        = d; 
+para.max_iter = 500;
+para.tau      = mean(abs(-0.5*(F_corrupted - (1/m)*ones(m)*F_corrupted - mean(E(:))*ones(m,n))));
+[X_estimated, P_estimated, S_est] = EDG_ALT(E, F_corrupted, para);
 
 %% Compute RMSE
 [rmse, ~, ~] = Compute_RMSE(P',P_estimated);

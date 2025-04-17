@@ -1,0 +1,42 @@
+Thresholding Method Results for m = 30, alpha = 0.20 over 50 trials
+
+Method: hard
+Parameters: {"tau":0.01}
+Mean RMSE: 0.0002881
+Median RMSE: 0.0002865
+Std RMSE: 2.159e-05
+Recovered (RMSE < 1e-1): 50/50
+------------------------------------------
+
+Method: soft
+Parameters: {"tau":0.01}
+Mean RMSE: 0.0001656
+Median RMSE: 0.0001505
+Std RMSE: 0.000103
+Recovered (RMSE < 1e-1): 50/50
+------------------------------------------
+
+Method: percentile
+Parameters: {"perc":10}
+Mean RMSE: 7.293
+Median RMSE: 6.436
+Std RMSE: 3.253
+Recovered (RMSE < 1e-1): 0/50
+------------------------------------------
+
+Method: weight_decay
+Parameters: {"tau0":0.01,"gamma":0.9}
+Mean RMSE: 0.0002878
+Median RMSE: 0.0002843
+Std RMSE: 1.766e-05
+Recovered (RMSE < 1e-1): 50/50
+------------------------------------------
+
+Method: mad
+Parameters: {"multiplier":5}
+Mean RMSE: 5.997e-05
+Median RMSE: 5.961e-05
+Std RMSE: 1.481e-05
+Recovered (RMSE < 1e-1): 50/50
+------------------------------------------
+
