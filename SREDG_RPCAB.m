@@ -1,45 +1,45 @@
-function [X,P,time_counter] = SREDG_RPCAB(E,F,r,RPCA, para, nyston)
-    % SREDG Sparse Robust Euclidean Distance Geometry algorithm for distance matrix completion
-    %
-    % Input:
-    % E: m x m matrix, the distance matrix of anchor nodes
-    % F: m x n matrix, the distance matrix between anchor and target nodes
-    % r: the rank of the distance matrix (typically dimension + 2)
-    % RPCA: the function handle of Robust PCA algorithm
-    % para: the parameter for RPCA  (e.g., AccAltProj)
-    %
-    % Output:
-    % X: (m+n) x (m+n) matrix, the Gram matrix of the distance matrix
+function [X,P,time_counter] = SREDG_RPCAB(data, params)
+  
 
-    % clean the distance matrix between anchor and target nodes
-    if isfield(para, 'show_output')
-        show_output = para.show_output;
+    % extract data
+    E = data.E_true;
+    F = data.F_corrupted; % corrupted distance matrix
+    F_true = data.F_true; % true distance matrix
+    r = params.d + 2; % rank of the distance matrix
+    d = params.d; % dimension of the points
+    RPCA = params.RPCA; % Robust PCA algorithm
+    paraF = params.param_function(F_true, r); % parameters for RPCA
+    [m, n] = size(F); % number of anchors and sensors
+
+    B_true = compute_B(E, F_true); % true block B
+    paraB = params.param_function(B_true, d); % parameters for RPCA on B block
+
+
+    if isfield(params, 'show_output')
+        show_output = params.show_output;
+        paraF.show_output = show_output;
+        paraB.show_output = show_output;
     else
         show_output = 2;
     end
 
-    if nargin < 6
+    if isfield(params, 'nyston')
+        nyston = params.nyston;
+    else
         nyston = "gram";
     end
 
     time_counter = 0;
     tstart = tic;
-    [F_hat, ~] = RPCA(F, r, para );
+    [F_hat, ~] = RPCA(F, r, paraF );
     % F_hat = F;
 
     if nyston == "gram"    
         % compute A and B
         [A, B] = compute_AB(E, F_hat);
 
-        m = size(E, 1);
-        n = size(F, 2);
-        d = r - 2; 
 
-        para.mu        = para.muB;
-        para.beta_init = d*sqrt(para.mu(1)*para.mu(end))/(sqrt(m*n));
-        para.beta      = d*sqrt(para.mu(1)*para.mu(end))/(4*sqrt(m*n));
-
-        [B_hat, SB] = RPCA(B, d, para); % RPCA on B block
+        [B_hat, SB] = RPCA(B, d, paraB); % RPCA on B block
         Bcor = (1/m) * ones(m,1) * (ones(1,m) * SB);
         B_hat = B_hat + Bcor; % add the mean back to B_hat
         % disp(max(SB(:)));
@@ -64,64 +64,4 @@ function [X,P,time_counter] = SREDG_RPCAB(E,F,r,RPCA, para, nyston)
     % fix the negative eigenvalues and ensure symmetry
     X = fix_gram_matrix(X);
     P = gram_to_points(X, r-2);
-end
-
-
-function [A, B] = compute_AB(E, F)
-    % COMPUTE_AB Computes blocks A and B of the Gram matrix from E and F blocks of distance matrices
-
-    % Dimensions of E and F
-    m = size(E, 1);
-    n = size(F, 2);
-
-    % Vector of ones
-    ones_m = ones(m, 1);
-    ones_n = ones(n, 1);
-
-    ones_mm = (1/m) * (ones_m * ones_m');
-    ones_mn = (1/m) * (ones_m * ones_n');
-
-    A = -0.5 * (E - E * ones_mm - ones_mm * E + m*mean(E(:)) * ones_mm);
-    B = -0.5 * (F - ones_mm * F - E * ones_mn + m*mean(E(:)) * ones_mn);
-end
-
-
-function X_new = fix_gram_matrix(X, tolerance)
-    % FIX_GRAM_MATRIX Fixes the negative eigenvalues of the Gram matrix and ensures symmetry
-    %
-    % Input:
-    % X: (m+n) x (m+n) matrix, the Gram matrix
-    % tolerance: the tolerance for fixing the negative eigenvalues
-    
-    if nargin < 2
-        tolerance = 0; 
-    end
-    
-    % Eigen decomposition
-    [V, D] = eig(X);
-    
-    % set those smaller than the tolerance to zero
-    D = diag(D); 
-    D(D < tolerance) = 0; 
-    D = diag(D); 
-    
-    % Reconstruct
-    X_new = V * D * V';
-
-    % Ensure symmetry and real values
-    X_new = (X_new + X_new') / 2; 
-    X_new = real(X_new);
-end
-
-function P = gram_to_points(X, d)
-    [V, Lam] = eigs(X, d, 'lm');
-    P = V * sqrt(Lam);
-end
-
-function X = dist2gram(D, m)
-    p = size(D, 1);
-    s = zeros(p,1);
-    s(1:m) = 1/m;
-    J = eye(p) - (ones(p,1)*s');
-    X = -0.5*J*D*J';
 end

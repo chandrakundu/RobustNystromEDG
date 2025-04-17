@@ -1,0 +1,16 @@
+**Method: SREDG_RPCAB(num_trials = 50)**
+SREDG with RPCA on B
+ 
+| m \ alpha | 0.10 |
+|---|---|
+| 20 | 0.841 (0.85) [10] |
+
+ 
+**Method: SREDG(num_trials = 50)**
+SREDG with RPCA on F
+ 
+| m \ alpha | 0.10 |
+|---|---|
+| 20 | 0.981 (0.82) [10] |
+
+ 

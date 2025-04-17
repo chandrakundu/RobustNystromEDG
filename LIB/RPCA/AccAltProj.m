@@ -48,7 +48,6 @@ function [ L, S ] = AccAltProj( D, r, para )
 %     disp("you should replace line 40-50 to be 'propack_exist = true;'.");
 %     pause;
 % end
-addpath E:\projects\edg\RobustNystromEDG\rpca\PROPACK\
 propack_exist = true;
 
 [m,n]     = size(D);

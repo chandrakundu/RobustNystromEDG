@@ -47,7 +47,7 @@ para.show_output = 2;
 para.muB        = 1.1*get_mu_kappa(F,r);  
 
 %% Apply SREDG
-[X_estimated, P_estimated, ~ ] = SREDG_RPCAB(E,F_corrupted,r,@AccAltProj, para);
+[X_estimated, P_estimated, ~ ] = SREDG(E,F_corrupted,r,@AccAltProj, para);
 
 
 %% Compute RMSE
