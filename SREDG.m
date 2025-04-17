@@ -19,8 +19,19 @@ function [X,P,time_counter] = SREDG(data, params)
     F = data.F_corrupted; % corrupted distance matrix
     F_true = data.F_true; % true distance matrix
     r = params.d + 2; % rank of the distance matrix
-    RPCA = params.RPCA; % Robust PCA algorithm
-    para = params.param_function(F_true, r); % parameters for RPCA
+
+    if isfield(params, 'RPCA')
+        RPCA = params.RPCA; % Robust PCA algorithm
+    else
+        RPCA = @AccAltProj; % default to AccAltProj
+    end
+
+    if isfield(params, 'param_function')
+        para = params.param_function(F_true, r); % parameters for RPCA
+    else
+        para = get_rpca_params(F_true, r); % default to the parameters in params
+    end
+
 
 
 

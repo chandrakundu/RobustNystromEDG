@@ -23,6 +23,14 @@ function [X,P,time_counter] = SREDG_RPCAB(data, params)
         show_output = 2;
     end
 
+    if isfield(params, 'Bcorrection')
+        Bcorrection = params.Bcorrection;
+    else
+        Bcorrection = true; % default to true
+    end
+
+    
+
     if isfield(params, 'nyston')
         nyston = params.nyston;
     else
@@ -31,7 +39,8 @@ function [X,P,time_counter] = SREDG_RPCAB(data, params)
 
     time_counter = 0;
     tstart = tic;
-    [F_hat, ~] = RPCA(F, r, paraF );
+    F_hat = GeometricConsistencyCleanup(E, F); 
+    [F_hat, ~] = RPCA(F_hat, r, paraF );
     % F_hat = F;
 
     if nyston == "gram"    
@@ -40,7 +49,12 @@ function [X,P,time_counter] = SREDG_RPCAB(data, params)
 
 
         [B_hat, SB] = RPCA(B, d, paraB); % RPCA on B block
-        Bcor = (1/m) * ones(m,1) * (ones(1,m) * SB);
+
+        if Bcorrection == true
+            Bcor = (1/m) * ones(m,1) * (ones(1,m) * SB);
+        else
+            Bcor = zeros(m, n);
+        end
         B_hat = B_hat + Bcor; % add the mean back to B_hat
         % disp(max(SB(:)));
         

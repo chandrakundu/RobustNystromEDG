@@ -1,10 +1,58 @@
-function [X_estimated, P_estimated, time_counter] = SREDG_AAP(E, F_corrupted, F_star, X_star, P_star, d, known_row_F, known_row_id, zeta0, gamma, accelerated, max_iter, tol, show_output)
+function [X_estimated, P_estimated, time_counter] = SREDG_AAP(data, params)
 
-    % SREDG_AAP:  
-    % Input:
-    %   E: m x m matrix, block E of the distance matrix
-    %   F_corrupted: m x n matrix, block F of the distance matrix with added noise
-    %   F_star: m x n matrix, block F of the distance matrix without noise
+    % SREDG_AAP:  SREDG with Accelerated Alternating Projection (AAP) method
+
+    E = data.E_true;
+    F_corrupted = data.F_corrupted; 
+    [m, n] = size(F_corrupted);
+    F_star = data.F_true; 
+    P_star = data.P_true;
+    X_star = P_star'*P_star; 
+    d = params.d; % dimension of the points
+    if isfield(params, 'known_row_id')
+        known_row_id = params.known_row_id; % known row index
+    else
+        known_row_id = m; % default to the first row
+    end
+    known_row_F = F_star(known_row_id, :); % known row of F
+
+    if isfield(params, 'max_iter')
+        max_iter = params.max_iter; % maximum number of iterations
+    else
+        max_iter = 100; % default to 100 iterations
+    end
+
+    if isfield(params, 'tol')
+        tol = params.tol; % tolerance for convergence
+    else
+        tol = 1e-14; % default to 1e-14
+    end
+
+    if isfield(params, 'show_output')
+        show_output = params.show_output; % show output
+    else
+        show_output = 2; % default to 2 (show output)
+    end
+
+
+    if isfield(params, 'zeta0')
+        zeta0 = params.zeta0; % initial threshold for hard thresholding
+    else
+        zeta0 = 1 * max(F_corrupted(:)); % default to the maximum value of F_corrupted
+    end
+
+    if isfield(params, 'gamma')
+        gamma = params.gamma; % decay rate for zeta
+    else
+        gamma = 0.9; % default to 0.9
+    end
+
+    if isfield(params, 'accelerated')
+        accelerated = params.accelerated; % use accelerated method
+    else
+        accelerated = true; % default to false
+    end
+
  
 
 
@@ -13,11 +61,13 @@ function [X_estimated, P_estimated, time_counter] = SREDG_AAP(E, F_corrupted, F_
     timer = zeros(1, max_iter); % time tracking
     
     % test codes 
-    [m, n] = size(F_corrupted);
+    
 
 
     % Initialization
     tic;
+
+    F_corrupted = GeometricConsistencyCleanup(E, F_corrupted); % geometric consistency cleanup
     S0 = hard_thresholding(F_corrupted, zeta0); % hard thresholding
     Fk = F_corrupted - S0; 
     B0 = operatorB(E, Fk); 
@@ -105,126 +155,4 @@ function Z_proj = projTangent(Z, Bk, d)
         UkUt = Uk*(Uk');
         VkVt = Vk*(Vk');
         Z_proj = UkUt*Z + Z*VkVt - UkUt*Z*VkVt;
-end
-
-
-function A = compute_A(E)
-    % compute_A Computes block A of the Gram matrix from E block of distance matrices
-
-    % Dimension of E 
-    m = size(E, 1);
-
-    % Vector and matrix of ones
-    ones_m = ones(m, 1);
-    ones_mm = (1/m) * (ones_m * ones_m');
-
-    A = -0.5 * (E - E * ones_mm - ones_mm * E + m*mean(E(:)) * ones_mm);
-end
-
-function B = compute_B(E, F)
-    % COMPUTE_B Computes block B of the Gram matrix from E and F blocks of distance matrices
-
-    % Dimensions of E and F
-    m = size(E, 1);
-    n = size(F, 2);
-
-    % Vector of ones
-    ones_m = ones(m, 1);
-    ones_n = ones(n, 1);
-
-    ones_mm = (1/m) * (ones_m * ones_m');
-    ones_mn = (1/m) * (ones_m * ones_n');
-
-    B = -0.5 * (F - ones_mm * F - E * ones_mn + m*mean(E(:)) * ones_mn);
-end
-
-
-function F = compute_F(B, E, known_row_F, k)
-    % COMPUTE_F Computes the F block of the Gram matrix from B, E, and a known row of F
-    %
-    % Inputs:
-    % B: m x n matrix, block B of the Gram matrix
-    % E: m x m matrix, block E of the distance matrix
-    % known_row_F: 1 x n vector, known row of F
-    % k: integer, index of the known row
-    %
-    % Output:
-    % F: m x n matrix, the F block of the Gram matrix
-
-    % Dimensions of B
-    [m, n] = size(B);
-
-    rowSumE = sum(E, 2); 
-    diffRowSumE = rowSumE - rowSumE(k);
-
-    diffB = B - repmat(B(k,:), m, 1);
-
-    FrowPart = repmat(known_row_F, m, 1);
-
-    F = FrowPart - 2 * diffB + (1/m) * diffRowSumE * ones(1, n);
-end
-
-
-% function for comparing results and display 
-function [X, P] = get_current_estimates(Bk, E, d)
-    X = EB_to_gram(E, Bk);
-    P = gram_to_points(X, d);
-    P_centered = P - mean(P, 1);
-    X = P_centered*P_centered';
-end
-
-
-function L = EF_to_gram(E, F)
-    % EF_to_gram:  Compute the Gram matrix from E and F blocks of distance matrices
-    %   L = [A B; B' C]
-    A = compute_A(E, F);
-    B = compute_B(E, F);
-    L = AB_to_gram(A, B);
-end
-
-function L = EB_to_gram(E, B)
-    % EB_to_gram:  Compute the Gram matrix from E block of distance matrix and B block of gram matrix
-    %   L = [A B; B' C]
-    A = compute_A(E);
-    L = AB_to_gram(A, B);
-end
-
-function L = AB_to_gram(A, B)
-    % AB_to_gram:  Compute the Gram matrix from A and B blocks of gram matrix
-    %   L = [A B; B' C]
-    C = B'*pinv(A, 0.01)*B;
-    L = [A B; B' C];
-    L = fix_gram_matrix(L);
-end
-
-function X_new = fix_gram_matrix(X, tolerance)
-    % FIX_GRAM_MATRIX Fixes the negative eigenvalues of the Gram matrix and ensures symmetry
-    %
-    % Input:
-    % X: (m+n) x (m+n) matrix, the Gram matrix
-    % tolerance: the tolerance for fixing the negative eigenvalues
-    
-    if nargin < 2
-        tolerance = 0; 
-    end
-    
-    % Eigen decomposition
-    [V, D] = eig(X);
-    
-    % set those smaller than the tolerance to zero
-    D = diag(D); 
-    D(D < tolerance) = 0; 
-    D = diag(D); 
-    
-    % Reconstruct
-    X_new = V * D * V';
-
-    % Ensure symmetry and real values
-    X_new = (X_new + X_new') / 2; 
-    X_new = real(X_new);
-end
-
-function P = gram_to_points(X, d)
-    [V, Lam] = eigs(X, d, 'lm');
-    P = V * sqrt(Lam);
 end

@@ -1,0 +1,73 @@
+### Temporary Comparison (num_trials = 50)
+
+#### m = 20, alpha = 0.10
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDG_AAP | 4.3826 | 3.6333 | 9 |
+| SREDG | 1.8444 | 1.4205 | 8 |
+
+#### m = 20, alpha = 0.20
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDG_AAP | 13.4088 | 5.1877 | 0 |
+| SREDG | 8.0406 | 1.7944 | 0 |
+
+#### m = 20, alpha = 0.30
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDG_AAP | 23.6324 | 5.4854 | 0 |
+| SREDG | 16.4978 | 1.7285 | 0 |
+
+#### m = 30, alpha = 0.10
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDG_AAP | 0.8146 | 1.9444 | 33 |
+| SREDG | 0.0078 | 0.3834 | 47 |
+
+#### m = 30, alpha = 0.20
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDG_AAP | 4.6255 | 3.5599 | 8 |
+| SREDG | 1.5515 | 1.3048 | 14 |
+
+#### m = 30, alpha = 0.30
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDG_AAP | 10.9330 | 5.4905 | 0 |
+| SREDG | 5.6694 | 1.3052 | 0 |
+
+#### m = 40, alpha = 0.10
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDG_AAP | 0.0000 | 0.4410 | 48 |
+| SREDG | 0.0000 | 0.0000 | 50 |
+
+#### m = 40, alpha = 0.20
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDG_AAP | 1.9699 | 2.3499 | 20 |
+| SREDG | 0.0895 | 0.4625 | 43 |
+
+#### m = 40, alpha = 0.30
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDG_AAP | 6.2574 | 4.4513 | 6 |
+| SREDG | 1.5908 | 1.1615 | 7 |
+
+#### m = 50, alpha = 0.10
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDG_AAP | 0.0305 | 0.6111 | 47 |
+| SREDG | 0.0000 | 0.0000 | 50 |
+
+#### m = 50, alpha = 0.20
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDG_AAP | 0.5278 | 1.3952 | 38 |
+| SREDG | 0.0000 | 0.0000 | 50 |
+
+#### m = 50, alpha = 0.30
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDG_AAP | 3.6459 | 3.1644 | 13 |
+| SREDG | 0.2874 | 0.5866 | 32 |

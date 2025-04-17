@@ -5,14 +5,13 @@ load_directory;
 m_values = 20:10:50;
 alpha_values = 0.1:0.1:0.3;
 n_trials = 50; % Number of trials
-res_file = "sredg_aap_results/testing_sredg_comp0.txt";
-temp_file = "sredg_aap_results/temp_file.txt";
+res_file = "results/comp_v2_2_sredg_vs_sredgAAP_Geometric_cleanF_d3.txt";
+temp_file = "results/temp_res_file2.txt";
 
 p = 500;  % number of points
-d = 2;    % dimension of the points
+d = 3;    % dimension of the points
 
 % Define methods to compare
-
 
 
 % SREDG PARAMS
@@ -24,15 +23,42 @@ params.tol = 1e-14; % Tolerance for convergence
 params.d = d; % Dimension of the points
 params.nyston = "gram"; 
 
+
+% SREDG_AAP PARAMS
+paramsAAP.show_output = 0; % Suppress output
+paramsAAP.max_iter = 100; % Maximum number of iterations
+paramsAAP.tol = 1e-14; % Tolerance for convergence
+paramsAAP.d = d; % Dimension of the points
+
+
+% methods = {
+%     struct('name', 'SREDG_RPCAB', ...
+%      'function', @SREDG_RPCAB, ....
+%      'params',  params, ...
+%       'desc', 'SREDG with RPCA on B and geometric cleaned F'),
+%     struct('name', 'SREDG', ...
+%      'function', @SREDG, ....
+%      'params',  params, ...
+%       'desc', 'SREDG with RPCA on F')
+% };
+
+
+% paramsAAP2 = paramsAAP;
+% paramsAAP2.accelerated = false; 
+
 methods = {
-    struct('name', 'SREDG_RPCAB', ...
-     'function', @SREDG_RPCAB, ....
-     'params',  params, ...
-      'desc', 'SREDG with RPCA on B'),
+    struct('name', 'SREDG_AAP', ...
+     'function', @SREDG_AAP, ....
+     'params',  paramsAAP, ...
+      'desc', 'SREDG AAP'),
+    % struct('name', 'SREDG_AAP2', ...
+    %  'function', @SREDG_AAP, ....
+    %  'params',  paramsAAP2, ...
+    %   'desc', 'SREDG AAP without projection'),
     struct('name', 'SREDG', ...
      'function', @SREDG, ....
      'params',  params, ...
-      'desc', 'SREDG with RPCA on F')
+      'desc', 'SREDG CISS paper')
 };
 
 recovery_threshold = 1e-1;
