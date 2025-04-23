@@ -1,0 +1,7 @@
+### Temporary Comparison (num_trials = 50)
+
+#### m = 20, alpha = 0.10
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDG_AAP_EXP | 9.4069 | 3.1460 | 2 |
+| SREDG | 1.9239 | 1.5827 | 7 |

@@ -1,55 +1,61 @@
-clc; close all;
-load_directory;
-% Generate data
-n = 101;
-c = [6;6];
-[X, Xc] = generatePlusSign(n, c);
+function [D_obs, X_true, P_true, D_true] = generate_data_RMDS(alpha, p, d, seed)
+    % GENERATE_DATA Generates random sensor and anchor locations
+    %
+    % Inputs:
+    % alpha: percentage of outliers
+    % p: total number of points
+    % d: dimension of the points
+    % seed: random seed for reproducibility
+    
+    switch nargin
+        case 0
+            alpha = 0.1; % default value
+            p = 101;     % default value
+            d = 2;       % default value
+            seed = 'shuffle'; % default value
+        case 1
+            p = 101;     % default value
+            d = 2;       % default value
+            seed = 'shuffle'; % default value
+        case 2
+            d = 2;       % default value
+            seed = 'shuffle'; % default value
+        case 3
+            seed = 'shuffle'; % default value
+    end
 
-% Compute Gram matrix and distance matrix
-L_star = Xc*Xc';
-D_star = diag(L_star)*ones(1,n) + ones(n,1)*diag(L_star)' - 2*L_star;
+    c = [6;6];
+    rng(seed);  % Set the random seed for reproducibility
+    [P, Pc] = generatePlusSign(p, c); % here Pc is centered at (0,0)
+    P_true = Pc'; 
 
-% inject outliers
-alpha = 0.2;
-D_obs = add_outliers(D_star, alpha);
+    X_true = Pc * Pc'; % Gram matrix
+
+    D_true = diag(X_true) * ones(1,p) + ones(p,1) * diag(X_true)' - 2 * X_true; % squared distance matrix
+
+    % outliers 
+    D_obs = add_outliers(D_true, alpha); % Add noise to the distance matrix 
+end
 
 
-% run RMDS_AAP
-r = 2;
-tol = 1e-6;
-zeta0 = 1.2 * max(D_star(:));
-gamma = 0.5;
-maxIter = 50;
-[Lk, Sk, Xk] = RMDS_AAP(D_obs, L_star, Xc, r, zeta0, gamma, maxIter, tol);
 
-% % Visualize data
 % figure;
 % plot(X(:,1), X(:,2), 'b.');
-% hold on;
-% plot(c(1), c(2), 'ro', 'MarkerSize', 8, 'MarkerFaceColor', 'r'); % mark the center
-% title('Original Data');
-% xlabel('x_1');
-% ylabel('x_2');
-% legend('Data Points', 'Center');
-% grid on;
-% axis equal;
-
-% figure;
-% plot(Xc(:,1), Xc(:,2), 'b.');
 % title('Centered Data');
 % xlabel('x_1');
 % ylabel('x_2');
 % grid on;
 % axis equal;
 
-%%% ---------- HELPER: Construct "Plus Sign" data in 2D ----------
+
 function [X, Xc] = generatePlusSign(n, c)
-    % Generate 101 points in a "plus" shape, centered at c = [6;6]
+    % Generate 101 points in a "plus" shape, centered at c 
     % The plus shape consists of a horizontal line (with nHalf points) 
     % and a vertical line (with n - nHalf points) to avoid duplicating the center.
+
     
-    % n = 101 (assumed)
-    nHalf = floor((n+1)/2); % will be 51
+    
+    nHalf = floor((n+1)/2); % if n = 101, nHalf = 51; if n = 100, nHalf = 50
     nVert = n - nHalf;       % will be 50
     
     coords = zeros(n, 2);

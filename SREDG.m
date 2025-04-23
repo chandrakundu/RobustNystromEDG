@@ -16,7 +16,7 @@ function [X,P,time_counter] = SREDG(data, params)
 
     % extract data
     E = data.E_true;
-    F = data.F_corrupted; % corrupted distance matrix
+    F = data.F_obs; % corrupted distance matrix
     F_true = data.F_true; % true distance matrix
     r = params.d + 2; % rank of the distance matrix
 

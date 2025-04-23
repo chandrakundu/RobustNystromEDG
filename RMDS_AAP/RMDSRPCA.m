@@ -1,4 +1,4 @@
-function [Lk, Sk, Xk] = RMDS_AAP(D, L_star, X_star, r, zeta0, gamma, maxIter, tol)
+function [Lk, Xk, timer] = RMDSRPCA(data, params)
     % RMDS_AAP  Robust MDS via Accelerated Alternating Projections.
     %
     %
@@ -15,71 +15,38 @@ function [Lk, Sk, Xk] = RMDS_AAP(D, L_star, X_star, r, zeta0, gamma, maxIter, to
     %       Sk       - final outlier matrix (n x n)
     %       Xk       - points. factor of Lk, i.e. Lk ~= Xk * Xk', up to rounding
     %
+        timer = 0;
+        D = data.D_obs;
+        L_star = data.X_true;  % true gram matrix (for error check only)
+        X_star = data.P_true';  % true coordinates (for RMSE check only)
+        D_star = data.D_true;
+
+        tol = get_field(params, 'tol', 1e-14);
+        maxIter = get_field(params, 'max_iter', 100);
+        show_output = get_field(params, 'show_output', 0);
+        zeta0 = get_field(params, 'zeta0', 1.2 * max(D_star(:)));
+        gamma = get_field(params, 'gamma', 0.9);
+        r = get_field(params, 'd', 2); % target rank
+        RPCA = get_field(params, 'RPCA', @AccAltProj);
+        para = get_rpca_params(D_star, r+2);
 
 
-        % display error in observed gram matrix
-        L_obs = operatorB(D);
-        error_gram = norm(L_star - L_obs, 'fro') / max(1, norm(L_star,'fro'));
-        error_points = Compute_RMSE(X_star, gram_to_points(L_obs, r));
-        fprintf('Observed: Gram error: %e; \t Points RMSE: %e\n', error_gram, error_points);
+        [D_hat,~] = RPCA(D, r+2, para);
+        D_hat = D_hat - diag(diag(D_hat));
         
-        % Initialization
-        % Hard threshold to find initial outliers
-        S0 = T_hardThreshold(D, zeta0);
-        
-        % Compute initial L^1
-        B0 = operatorB(D - S0);           % B = -1/2 * J(D-S0)J
-        Lk = projHrPlus(B0, r);           % L^1 = H_r^+(B0)
-        Sk = S0;                          % Current estimate of outlier matrix
-        
-        % gram matrix to points
+        Lk = operatorB(D_hat); 
+        Lk = projHrPlus(Lk, r); 
+
         Xk = gram_to_points(Lk, r);
 
-        % display initial error
+
+
         error_gram = norm(L_star - Lk, 'fro') / max(1, norm(L_star,'fro'));
         error_points = Compute_RMSE(X_star, Xk);
-        fprintf('Initial Gram error: %e; Initial Points RMSE: %e\n', error_gram, error_points);
+        fprintf('Observed: Gram error: %e; \t Points RMSE: %e\n', error_gram, error_points);
         
-        % Main Loop
-        for k = 1:maxIter
-            
-            % Update threshold
-            zeta_k = zeta0 * (gamma^(k-1));
-            
-            % Update outlier matrix
-            ALk = operatorA(Lk);
-            Sk_new = T_hardThreshold(D - ALk, zeta_k);
-            
-            %  Compute new Lk
-            Bk = operatorB(D - Sk_new);
-            
-            %   Project onto tangent space at L^k
-            %   We need U^k from the rank-r decomposition of L^k to define P_{T^k}
-            [Uk, ~] = eigs(Lk, r, 'largestreal', 'Tolerance',1e-6);            
-            Bproj = projTangent(Bk, Uk);
-            %   Then keep top-r PSD part
-            Lk_new = projHrPlus(Bproj, r);
-            
-            % Convergence checks
-            diffL = norm(Lk_new - Lk, 'fro') / max(1, norm(Lk,'fro'));
-            Lk = Lk_new;
-            Sk = Sk_new;
-            
-            %   update Xk 
-            Xk = gram_to_points(Lk, r);
-
-            % display error
-            error_gram = norm(L_star - Lk, 'fro') / max(1, norm(L_star,'fro'));
-            error_points = Compute_RMSE(X_star, Xk);
-            fprintf('Iteration %d: \t Gram error: %e; \t Points RMSE: %e\n', k, error_gram, error_points);
-
-            
-            if diffL < tol
-                fprintf('Converged at iteration %d with relative change %e\n', k, diffL);
-                break;
-            end
-            
-        end
+        
+        
     end
     
     %% =============== Helper Subfunctions ===============

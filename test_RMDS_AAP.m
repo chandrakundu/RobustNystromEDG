@@ -1,5 +1,5 @@
-clc; close all;
-load_directory;
+clear; clc;
+load_directory
 % Generate data
 n = 101;
 c = [6;6];
@@ -10,37 +10,47 @@ L_star = Xc*Xc';
 D_star = diag(L_star)*ones(1,n) + ones(n,1)*diag(L_star)' - 2*L_star;
 
 % inject outliers
-alpha = 0.2;
+alpha = 0.3;
 D_obs = add_outliers(D_star, alpha);
 
 
 % run RMDS_AAP
 r = 2;
-tol = 1e-6;
-zeta0 = 1.2 * max(D_star(:));
-gamma = 0.5;
-maxIter = 50;
+tol = 1e-14;
+zeta0 = 1.1 * max(D_star(:));
+gamma = 0.9;
+maxIter = 100;
 [Lk, Sk, Xk] = RMDS_AAP(D_obs, L_star, Xc, r, zeta0, gamma, maxIter, tol);
 
-% % Visualize data
-% figure;
-% plot(X(:,1), X(:,2), 'b.');
-% hold on;
-% plot(c(1), c(2), 'ro', 'MarkerSize', 8, 'MarkerFaceColor', 'r'); % mark the center
-% title('Original Data');
-% xlabel('x_1');
-% ylabel('x_2');
-% legend('Data Points', 'Center');
-% grid on;
-% axis equal;
 
-% figure;
-% plot(Xc(:,1), Xc(:,2), 'b.');
-% title('Centered Data');
-% xlabel('x_1');
-% ylabel('x_2');
-% grid on;
-% axis equal;
+para = get_rpca_params(D_star, r);
+[Lk2, ~] = AccAltProj(D_obs, r, para );
+
+Xk2 = gram_to_points(Lk2, r);
+error_gram = norm(L_star - Lk2, 'fro') / max(1, norm(L_star,'fro'));
+error_points = Compute_RMSE(Xc, Xk2);
+fprintf('RPCA RMDS \t Gram error: %e; \t Points RMSE: %e\n', error_gram, error_points);
+
+
+% Visualize data
+figure;
+plot(X(:,1), X(:,2), 'b.');
+hold on;
+plot(c(1), c(2), 'ro', 'MarkerSize', 8, 'MarkerFaceColor', 'r'); % mark the center
+title('Original Data');
+xlabel('x_1');
+ylabel('x_2');
+legend('Data Points', 'Center');
+grid on;
+axis equal;
+
+figure;
+plot(Xc(:,1), Xc(:,2), 'b.');
+title('Centered Data');
+xlabel('x_1');
+ylabel('x_2');
+grid on;
+axis equal;
 
 %%% ---------- HELPER: Construct "Plus Sign" data in 2D ----------
 function [X, Xc] = generatePlusSign(n, c)

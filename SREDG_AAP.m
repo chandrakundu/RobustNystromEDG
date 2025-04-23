@@ -15,6 +15,7 @@ function [X_estimated, P_estimated, time_counter] = SREDG_AAP(data, params)
         known_row_id = m; % default to the first row
     end
     known_row_F = F_star(known_row_id, :); % known row of F
+    F_corrupted(known_row_id, :) = known_row_F;
 
     if isfield(params, 'max_iter')
         max_iter = params.max_iter; % maximum number of iterations
@@ -67,8 +68,11 @@ function [X_estimated, P_estimated, time_counter] = SREDG_AAP(data, params)
     % Initialization
     tic;
 
-    F_corrupted = GeometricConsistencyCleanup(E, F_corrupted); % geometric consistency cleanup
-    S0 = hard_thresholding(F_corrupted, zeta0); % hard thresholding
+    % F_corrupted = GeometricConsistencyCleanup(E, F_corrupted); % geometric consistency cleanup
+    zeta0 = max(abs(F_star(:))); 
+    % S0 = hard_thresholding(F_star, zeta0);
+    S0 = hard_thresholding(F_corrupted, zeta0); % hard thresholding   
+    % sum(sum(S0 ~= 0))/(m*n)
     Fk = F_corrupted - S0; 
     B0 = operatorB(E, Fk); 
     Bk = projHr(B0, d);  
@@ -77,12 +81,21 @@ function [X_estimated, P_estimated, time_counter] = SREDG_AAP(data, params)
 
     for k = 1:max_iter
         tic;
-        Fk_new = operatorA(Bk, E, known_row_F, known_row_id); 
+        Fk_new = operatorA(Bk, E, known_row_F, known_row_id);
+        
+        Fk_new(known_row_id, : ) = known_row_F;
+        % Fk_new = GeometricConsistencyCleanup(E, Fk_new);
 
 
         Rk = F_corrupted - Fk_new; 
-        zeta = zeta0 * (gamma^(k-1)); 
+        % zeta = zeta0 * (gamma^(k-1)); 
+        % S0 = hard_thresholding(Rk, zeta); 
+        
+
+        Zk = F_star - Fk_new;
+        zeta = 0.95*max(abs(Zk(:)));
         S0 = hard_thresholding(Rk, zeta); 
+        sum(sum(S0 ~= 0))/(m*n)
 
 
         Fk_new = F_corrupted - S0;
@@ -135,7 +148,7 @@ end
 
 function S = hard_thresholding(F, zeta)
     % HARD_THRESHOLDING Performs hard thresholding on the matrix F
-    S = F .* (abs(F) > zeta);
+    S = F .* (abs(F) >=  zeta);
 end
 
 function Xr = projHr(X,r)

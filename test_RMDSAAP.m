@@ -14,7 +14,6 @@ d = 3;    % dimension of the points
 r = d + 2; 
 n = p - m; 
 
-
 rmse_all = zeros(n_trials, 1); 
 
 for i = 1:n_trials
@@ -55,6 +54,3 @@ recovered = sum(rmse_all < 0.1); % count the number of trials with RMSE < 0.1
 fprintf('================================\n');
 fprintf('p = %d, m = %d, alpha = %.2f, trial = %d, mean RMSE = %.4g, recovered = %d\n', ...
         p, m, alpha, n_trials, mean_rmse, recovered);
-
-%% Visualization
-% plot_points(P',P_estimated,m)

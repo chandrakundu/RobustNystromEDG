@@ -5,9 +5,8 @@ load_directory
 
 n_trials = 1; % Number of trials
 alpha = 0.1; % percentage of outliers
-m = 20;   % number of anchors, here minimum m = round(4*(d+2)*log(p));
-show_output = 2;
-max_iter = 2;
+m = 40;   % number of anchors, here minimum m = round(4*(d+2)*log(p));
+show_output = 0;
 
 p = 500;  % number of points
 d = 3;    % dimension of the points
@@ -29,12 +28,10 @@ for i = 1:n_trials
 
 
     params.show_output = show_output; 
-    params.max_iter = max_iter; 
     params.d = d; % dimension of the points
-    params.alpha = alpha;
 
 
-    [~, P_estimated, ~ ] = SREDG_AAP_EXP(data, params);
+    [~, P_estimated, ~ ] = SREDG_EXP(data, params);
 
     %% Compute RMSE
     [rmse, ~, ~] = Compute_RMSE(P_true',P_estimated);

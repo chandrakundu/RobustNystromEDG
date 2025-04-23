@@ -1,4 +1,4 @@
-function [Lk, Sk, Xk] = RMDS_AAP(D, L_star, X_star, r, zeta0, gamma, maxIter, tol)
+function [Lk, Xk, timer] = RMDSAAP(data, params)
     % RMDS_AAP  Robust MDS via Accelerated Alternating Projections.
     %
     %
@@ -15,6 +15,18 @@ function [Lk, Sk, Xk] = RMDS_AAP(D, L_star, X_star, r, zeta0, gamma, maxIter, to
     %       Sk       - final outlier matrix (n x n)
     %       Xk       - points. factor of Lk, i.e. Lk ~= Xk * Xk', up to rounding
     %
+        timer = 0;
+        D = data.D_obs;
+        L_star = data.X_true;  % true gram matrix (for error check only)
+        X_star = data.P_true';  % true coordinates (for RMSE check only)
+        D_star = data.D_true;
+
+        tol = get_field(params, 'tol', 1e-14);
+        maxIter = get_field(params, 'max_iter', 100);
+        show_output = get_field(params, 'show_output', 0);
+        zeta0 = get_field(params, 'zeta0', 1.2 * max(D_star(:)));
+        gamma = get_field(params, 'gamma', 0.9);
+        r = get_field(params, 'd', 2); % target rank
 
 
         % display error in observed gram matrix
@@ -36,9 +48,11 @@ function [Lk, Sk, Xk] = RMDS_AAP(D, L_star, X_star, r, zeta0, gamma, maxIter, to
         Xk = gram_to_points(Lk, r);
 
         % display initial error
-        error_gram = norm(L_star - Lk, 'fro') / max(1, norm(L_star,'fro'));
-        error_points = Compute_RMSE(X_star, Xk);
-        fprintf('Initial Gram error: %e; Initial Points RMSE: %e\n', error_gram, error_points);
+        if show_output == 2
+            error_gram = norm(L_star - Lk, 'fro') / max(1, norm(L_star,'fro'));
+            error_points = Compute_RMSE(X_star, Xk);
+            fprintf('Initial Gram error: %e; Initial Points RMSE: %e\n', error_gram, error_points);
+        end
         
         % Main Loop
         for k = 1:maxIter
@@ -69,17 +83,19 @@ function [Lk, Sk, Xk] = RMDS_AAP(D, L_star, X_star, r, zeta0, gamma, maxIter, to
             Xk = gram_to_points(Lk, r);
 
             % display error
-            error_gram = norm(L_star - Lk, 'fro') / max(1, norm(L_star,'fro'));
-            error_points = Compute_RMSE(X_star, Xk);
-            fprintf('Iteration %d: \t Gram error: %e; \t Points RMSE: %e\n', k, error_gram, error_points);
+            if show_output == 2
+                error_gram = norm(L_star - Lk, 'fro') / max(1, norm(L_star,'fro'));
+                error_points = Compute_RMSE(X_star, Xk);
+                fprintf('Iteration %d: \t Gram error: %e; \t Points RMSE: %e\n', k, error_gram, error_points);
+            end
 
             
             if diffL < tol
                 fprintf('Converged at iteration %d with relative change %e\n', k, diffL);
                 break;
-            end
-            
+            end            
         end
+        
     end
     
     %% =============== Helper Subfunctions ===============

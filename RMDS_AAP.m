@@ -8,7 +8,7 @@ function [Lk, Sk, Xk] = RMDS_AAP(D, L_star, X_star, r, zeta0, gamma, maxIter, to
     %       zeta0    - initial threshold parameter (scalar)
     %       gamma    - decay rate in (0,1)
     %       maxIter  - maximum number of iterations
-    %       tol      - convergence tolerance (e.g., 1e-14)
+    %       tol      - convergence tolerance (e.g., 1e-8)
     %
     %   Outputs:
     %       Lk       - final Gram matrix (n x n)
@@ -16,14 +16,23 @@ function [Lk, Sk, Xk] = RMDS_AAP(D, L_star, X_star, r, zeta0, gamma, maxIter, to
     %       Xk       - points. factor of Lk, i.e. Lk ~= Xk * Xk', up to rounding
     %
 
+    
+        % 1) Basic checks and setup
+        n = size(D,1);
+        if size(D,2) ~= n
+            error('Input matrix D must be square');
+        end
+        if ~issymmetric(D)
+            error('Input matrix D must be symmetric');
+        end
 
         % display error in observed gram matrix
         L_obs = operatorB(D);
         error_gram = norm(L_star - L_obs, 'fro') / max(1, norm(L_star,'fro'));
         error_points = Compute_RMSE(X_star, gram_to_points(L_obs, r));
-        fprintf('Observed: Gram error: %e; \t Points RMSE: %e\n', error_gram, error_points);
+        fprintf('Gram (from obs dist) error: %e; \t Points (from obs dist) RMSE: %e\n', error_gram, error_points);
         
-        % Initialization
+        % 2) Initialization
         % Hard threshold to find initial outliers
         S0 = T_hardThreshold(D, zeta0);
         
@@ -38,9 +47,9 @@ function [Lk, Sk, Xk] = RMDS_AAP(D, L_star, X_star, r, zeta0, gamma, maxIter, to
         % display initial error
         error_gram = norm(L_star - Lk, 'fro') / max(1, norm(L_star,'fro'));
         error_points = Compute_RMSE(X_star, Xk);
-        fprintf('Initial Gram error: %e; Initial Points RMSE: %e\n', error_gram, error_points);
+        fprintf('Initial Gram error: %e; \t Initial Points RMSE: %e\n', error_gram, error_points);
         
-        % Main Loop
+        % 3) Main Loop
         for k = 1:maxIter
             
             % Update threshold

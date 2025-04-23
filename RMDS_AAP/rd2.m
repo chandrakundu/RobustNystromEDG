@@ -1,4 +1,4 @@
-function [Lk, Sk, Xk] = RMDS_AAP(D, L_star, X_star, r, zeta0, gamma, maxIter, tol)
+function [Lk, Sk, Xk] = rd2(data, params)
     % RMDS_AAP  Robust MDS via Accelerated Alternating Projections.
     %
     %
@@ -15,6 +15,17 @@ function [Lk, Sk, Xk] = RMDS_AAP(D, L_star, X_star, r, zeta0, gamma, maxIter, to
     %       Sk       - final outlier matrix (n x n)
     %       Xk       - points. factor of Lk, i.e. Lk ~= Xk * Xk', up to rounding
     %
+
+        D = data.D_obs;
+        L_star = data.X_true;  % true gram matrix (for error check only)
+        X_star = data.P_true';  % true coordinates (for RMSE check only)
+
+        tol = get_field(params, 'tol', 1e-14);
+        maxIter = get_field(params, 'max_iter', 100);
+        show_output = get_field(params, 'show_output', 0);
+        zeta0 = get_field(params, 'zeta0', 1.2 * max(D(:)));
+        gamma = get_field(params, 'gamma', 0.9);
+        r = get_field(params, 'r', 2); % target rank
 
 
         % display error in observed gram matrix

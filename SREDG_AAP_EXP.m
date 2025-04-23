@@ -1,54 +1,132 @@
-%% SREDG_AAP initialization test
-function [X_estimated, P_estimated, time_counter] = SREDG_AAP_test(E, F_corrupted, F_star, X_star, P_star, d, known_row_F, known_row_id, zeta0, gamma, accelerated, max_iter, tol, show_output)
+function [X_estimated, P_estimated, time_counter] = SREDG_AAP(data, params)
 
-    % SREDG_AAP:  
-    % Input:
-    %   E: m x m matrix, block E of the distance matrix
-    %   F_corrupted: m x n matrix, block F of the distance matrix with added noise
-    %   F_star: m x n matrix, block F of the distance matrix without noise
- 
+    % SREDG_AAP:  SREDG with Accelerated Alternating Projection (AAP) method
 
+    E = data.E_true;
+    F_corrupted = data.F_corrupted; 
+    [m, n] = size(F_corrupted);
+    F_star = data.F_true; 
+    P_star = data.P_true;
+    X_star = P_star'*P_star; 
+    d = params.d; 
+    r = d + 2; 
+
+
+
+    % set default parameters
+    if isfield(params, 'known_row_id')
+        known_row_id = params.known_row_id; 
+    else
+        known_row_id = m; 
+    end
+    known_row_F = F_star(known_row_id, :); 
+    F_corrupted(known_row_id, :) = known_row_F;
+
+    if isfield(params, 'max_iter')
+        max_iter = params.max_iter; 
+    else
+        max_iter = 100; 
+    end
+
+    if isfield(params, 'tol')
+        tol = params.tol; 
+    else
+        tol = 1e-14; 
+    end
+
+    if isfield(params, 'show_output')
+        show_output = params.show_output; 
+    else
+        show_output = 0; 
+    end
+
+
+    if isfield(params, 'zeta0')
+        zeta0 = params.zeta0; % initial threshold for hard thresholding
+    else
+        zeta0 = 1 * max(F_corrupted(:)); % default to the maximum value of F_corrupted
+    end
+
+    if isfield(params, 'gamma')
+        gamma = params.gamma; % decay rate for zeta
+    else
+        gamma = 0.8; % default to 0.9
+    end
+
+    if isfield(params, 'accelerated')
+        accelerated = params.accelerated; % use accelerated method
+    else
+        accelerated = true; % default to false
+    end
+
+    if isfield(params, 'alpha')
+        alpha = params.alpha; % percentage of outliers
+    else
+        alpha = 0.1; % default to 0.1
+    end
 
 
     % initialize tracking variables
     timer = zeros(1, max_iter); % time tracking
     
     % test codes 
-    [m, n] = size(F_corrupted);
+    
 
 
     % Initialization
     tic;
-    % S0 = hard_thresholding(F_corrupted, zeta0); % hard thresholding
-    % Fk = F_corrupted - S0; 
-   
-    % New initialization using true value with added Gaussian noise
-    noise_level = 1e-7; % Small controllable Gaussian noise level
-    S0 = zeros(size(F_corrupted)); % Sparse noise initialization
-    Fk = F_star + noise_level * randn(size(F_star)); % Perturbed true value
 
+    % F_corrupted = GeometricConsistencyCleanup(E, F_corrupted); % geometric consistency cleanup
+    zeta0 = max(abs(F_star(:))); 
+    % S0 = hard_thresholding(F_star, zeta0);
+    S0 = hard_thresholding(F_corrupted, zeta0); % hard thresholding   
+    % sum(sum(S0 ~= 0))/(m*n)
+    Fk = F_corrupted - S0; 
 
     B0 = operatorB(E, Fk); 
     Bk = projHr(B0, d);  
+
     init_timer = toc(tic);
 
-    % init errors 
-    err_F0 = norm(F_star - Fk, 'fro') / norm(F_star, 'fro');
-    err_B0 = norm(B0 - Bk, 'fro') / norm(B0, 'fro');
-    fprintf('Initial errors: err_F0 = %0.4e, err_B0 = %0.4e\n', err_F0, err_B0);
+    if show_output == 2
+        [X_estimated, P_estimated] = get_current_estimates(Bk, E, d);
+        error_Fcor = norm(F_star - F_corrupted, 'fro') / norm(F_star, 'fro');
+        error_Fk = norm(F_star - Fk, 'fro') / norm(F_star, 'fro');
+        error_Bk = norm(B0 - Bk, 'fro') / norm(B0, 'fro');
+        error_gram = norm(X_star - X_estimated, 'fro') / norm(X_star, 'fro');
+        rmse_points = Compute_RMSE(P_star', P_estimated);
+        fprintf('Initialization: error_Fobs_vs_Fstar = %0.4e, error_Fk_vs_Fstar = %0.4e, error_Bk = %0.4e, error_gram = %0.4e, rmse_points = %0.4e, time = %f seconds\n', error_Fcor, error_Fk, error_Bk, error_gram, rmse_points, init_timer);
+    end
+
 
 
     for k = 1:max_iter
         tic;
-        Fk_new = operatorA(Bk, E, known_row_F, known_row_id); 
+        Fk = operatorA(Bk, E, known_row_F, known_row_id);
+        
+        Fk(known_row_id, : ) = known_row_F;
+        % Fk_new = GeometricConsistencyCleanup(E, Fk_new);
 
 
-        Rk = F_corrupted - Fk_new; 
-        zeta = zeta0 * (gamma^(k-1)); 
-        S0 = hard_thresholding(Rk, zeta); 
+        Rk = F_corrupted - Fk; 
+        % zeta = zeta0 * (gamma^(k-1)); 
+        % S0 = hard_thresholding(Rk, zeta); 
+        
+
+        % Zk = F_star - Fk_new;
+        % better_zeta = max(abs(Zk(:)));
+
+        % fprintf('zeta = %.4g, better_zeta = %.4g\n', zeta, better_zeta);
+        
+        % S0 = hard_thresholding(Rk, zeta); 
+        % sum(sum(S0 ~= 0))/(m*n)
+
+
 
 
         Fk_new = F_corrupted - S0;
+        % Fk_new = projHr(Fk_new, r); % projection onto rank-r manifold
+
         Bk_new = operatorB(E, Fk_new);
 
         % Project onto tangent space at Bk
@@ -60,13 +138,14 @@ function [X_estimated, P_estimated, time_counter] = SREDG_AAP_test(E, F_corrupte
 
         timer(k) = toc(tic); % time tracking
         if show_output == 2
-            [X_estimated, P_estimated] = get_current_estimates(Bk, E, d);
-            error_gram = norm(X_star - X_estimated, 'fro') / norm(X_star, 'fro');
-            rmse_points = Compute_RMSE(P_star', P_estimated);
+            [X_estimated, P_estimated] = get_current_estimates(Bk, E, d);            
             err_FvsF_star = norm(F_star - Fk, 'fro') / norm(F_star, 'fro');
             err_FvsFk = norm(Fk_new - Fk, 'fro') / norm(Fk, 'fro');
             error_Bk = norm(Bk - Bk_new, 'fro') / norm(Bk, 'fro');
-            fprintf('i=%d, err_Bk = %0.4e, FvsFs = %0.4e, FvsFk = %0.4e, err_gram = %0.4e, rmse_pt = %0.4e, time = %f seconds\n', k, error_Bk, err_FvsF_star, err_FvsFk, error_gram, rmse_points, timer(k));
+            error_gram = norm(X_star - X_estimated, 'fro') / norm(X_star, 'fro');
+            rmse_points = Compute_RMSE(P_star', P_estimated);
+            fprintf('SREDG_AAP: i=%d, error_Fk_vs_Fstar = %.4f, error_Fk_vs_Fk_1 = %.4f, error_Bk = %.4f, error_gram = %.4f, rmse_points = %.4f, time = %f seconds\n', k, err_FvsF_star, err_FvsFk, error_Bk, error_gram, rmse_points, timer(k));
+            
         end
 
         % if error_Bk < tol
@@ -88,9 +167,9 @@ function [X_estimated, P_estimated, time_counter] = SREDG_AAP_test(E, F_corrupte
 end
 
 
-
 function F = operatorA(B, E, known_row_F, k)
     F = compute_F(B, E, known_row_F, k);
+    % F = computeF2(B,E);
 end
 
 function B = operatorB(E, F)
@@ -99,7 +178,7 @@ end
 
 function S = hard_thresholding(F, zeta)
     % HARD_THRESHOLDING Performs hard thresholding on the matrix F
-    S = F .* (abs(F) > zeta);
+    S = F .* (abs(F) >  zeta);
 end
 
 function Xr = projHr(X,r)
@@ -119,126 +198,4 @@ function Z_proj = projTangent(Z, Bk, d)
         UkUt = Uk*(Uk');
         VkVt = Vk*(Vk');
         Z_proj = UkUt*Z + Z*VkVt - UkUt*Z*VkVt;
-end
-
-
-function A = compute_A(E)
-    % compute_A Computes block A of the Gram matrix from E block of distance matrices
-
-    % Dimension of E 
-    m = size(E, 1);
-
-    % Vector and matrix of ones
-    ones_m = ones(m, 1);
-    ones_mm = (1/m) * (ones_m * ones_m');
-
-    A = -0.5 * (E - E * ones_mm - ones_mm * E + m*mean(E(:)) * ones_mm);
-end
-
-function B = compute_B(E, F)
-    % COMPUTE_B Computes block B of the Gram matrix from E and F blocks of distance matrices
-
-    % Dimensions of E and F
-    m = size(E, 1);
-    n = size(F, 2);
-
-    % Vector of ones
-    ones_m = ones(m, 1);
-    ones_n = ones(n, 1);
-
-    ones_mm = (1/m) * (ones_m * ones_m');
-    ones_mn = (1/m) * (ones_m * ones_n');
-
-    B = -0.5 * (F - ones_mm * F - E * ones_mn + m*mean(E(:)) * ones_mn);
-end
-
-
-function F = compute_F(B, E, known_row_F, k)
-    % COMPUTE_F Computes the F block of the Gram matrix from B, E, and a known row of F
-    %
-    % Inputs:
-    % B: m x n matrix, block B of the Gram matrix
-    % E: m x m matrix, block E of the distance matrix
-    % known_row_F: 1 x n vector, known row of F
-    % k: integer, index of the known row
-    %
-    % Output:
-    % F: m x n matrix, the F block of the Gram matrix
-
-    % Dimensions of B
-    [m, n] = size(B);
-
-    rowSumE = sum(E, 2); 
-    diffRowSumE = rowSumE - rowSumE(k);
-
-    diffB = B - repmat(B(k,:), m, 1);
-
-    FrowPart = repmat(known_row_F, m, 1);
-
-    F = FrowPart - 2 * diffB + (1/m) * diffRowSumE * ones(1, n);
-end
-
-
-% function for comparing results and display 
-function [X, P] = get_current_estimates(Bk, E, d)
-    X = EB_to_gram(E, Bk);
-    P = gram_to_points(X, d);
-    P_centered = P - mean(P, 1);
-    X = P_centered*P_centered';
-end
-
-
-function L = EF_to_gram(E, F)
-    % EF_to_gram:  Compute the Gram matrix from E and F blocks of distance matrices
-    %   L = [A B; B' C]
-    A = compute_A(E, F);
-    B = compute_B(E, F);
-    L = AB_to_gram(A, B);
-end
-
-function L = EB_to_gram(E, B)
-    % EB_to_gram:  Compute the Gram matrix from E block of distance matrix and B block of gram matrix
-    %   L = [A B; B' C]
-    A = compute_A(E);
-    L = AB_to_gram(A, B);
-end
-
-function L = AB_to_gram(A, B)
-    % AB_to_gram:  Compute the Gram matrix from A and B blocks of gram matrix
-    %   L = [A B; B' C]
-    C = B'*pinv(A, 0.01)*B;
-    L = [A B; B' C];
-    L = fix_gram_matrix(L);
-end
-
-function X_new = fix_gram_matrix(X, tolerance)
-    % FIX_GRAM_MATRIX Fixes the negative eigenvalues of the Gram matrix and ensures symmetry
-    %
-    % Input:
-    % X: (m+n) x (m+n) matrix, the Gram matrix
-    % tolerance: the tolerance for fixing the negative eigenvalues
-    
-    if nargin < 2
-        tolerance = 0; 
-    end
-    
-    % Eigen decomposition
-    [V, D] = eig(X);
-    
-    % set those smaller than the tolerance to zero
-    D = diag(D); 
-    D(D < tolerance) = 0; 
-    D = diag(D); 
-    
-    % Reconstruct
-    X_new = V * D * V';
-
-    % Ensure symmetry and real values
-    X_new = (X_new + X_new') / 2; 
-    X_new = real(X_new);
-end
-
-function P = gram_to_points(X, d)
-    [V, Lam] = eigs(X, d, 'lm');
-    P = V * sqrt(Lam);
 end

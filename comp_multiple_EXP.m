@@ -5,11 +5,11 @@ load_directory;
 m_values = 20:10:50;
 alpha_values = 0.1:0.1:0.3;
 n_trials = 50; % Number of trials
-res_file = "results/comp_v3_sredg_vs_sredgAAPA_rmdsAAP2.txt";
-temp_file = "results/temp_res_file2.txt";
+res_file = "results/exp/comp_v2_2_sredg_vs_sredg_AAP.txt";
+temp_file = "results/exp/temp_res_file1.txt";
 
 p = 500;  % number of points
-d = 2;    % dimension of the points
+d = 3;    % dimension of the points
 
 % Define methods to compare
 
@@ -24,16 +24,16 @@ params.d = d; % Dimension of the points
 params.nyston = "gram"; 
 
 
-% SREDG_AAP PARAMS
+% % SREDG_AAP PARAMS
 paramsAAP.show_output = 0; % Suppress output
-paramsAAP.max_iter = 100; % Maximum number of iterations
+paramsAAP.max_iter = 20; % Maximum number of iterations
 paramsAAP.tol = 1e-14; % Tolerance for convergence
 paramsAAP.d = d; % Dimension of the points
-paramsAAP.known_row_id = 1;
+
 
 % methods = {
 %     struct('name', 'SREDG_RPCAB', ...
-%      'function', @SREDG_RPCAB, ....
+%      'function', @SREDG_EXP, ....
 %      'params',  params, ...
 %       'desc', 'SREDG with RPCA on B and geometric cleaned F'),
 %     struct('name', 'SREDG', ...
@@ -47,10 +47,10 @@ paramsAAP.known_row_id = 1;
 % paramsAAP2.accelerated = false; 
 
 methods = {
-    struct('name', 'SREDGAAP', ...
-     'function', @SREDGAAP, ....
+    struct('name', 'SREDG_AAP_EXP', ...
+     'function', @SREDG_AAP, ....
      'params',  paramsAAP, ...
-    'desc', 'SREDG AAP new implementation from RMDSAAP'),
+    'desc', 'SREDG AAP '),
     % struct('name', 'SREDG_AAP2', ...
     %  'function', @SREDG_AAP, ....
     %  'params',  paramsAAP2, ...
@@ -88,11 +88,11 @@ for i = 1:length(m_values)
         
         for trial = 1:n_trials
             % Generate data for this trial
-            [F_obs, E_true, F_true, P_true] = generate_data_SREDG(alpha_values(j), m_values(i), p, d);
+            [E_true, F_corrupted, P_true, ~, F_true, ~] = generate_data(alpha_values(j), m_values(i), p, d);
 
             data = struct( ...
                 'E_true', E_true, ...
-                'F_obs', F_obs, ...
+                'F_corrupted', F_corrupted, ...
                 'P_true', P_true, ...
                 'F_true', F_true ...
             );
