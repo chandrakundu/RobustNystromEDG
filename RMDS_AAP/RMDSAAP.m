@@ -22,7 +22,7 @@ function [Lk, Xk, timer] = RMDSAAP(data, params)
         D_star = data.D_true;
 
         tol = get_field(params, 'tol', 1e-14);
-        maxIter = get_field(params, 'max_iter', 100);
+        maxIter = get_field(params, 'max_iter', 300);
         show_output = get_field(params, 'show_output', 0);
         zeta0 = get_field(params, 'zeta0', 1.2 * max(D_star(:)));
         gamma = get_field(params, 'gamma', 0.9);

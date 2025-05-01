@@ -2,10 +2,10 @@ clear;
 load_directory;
 
 % User-defined parameters
-m_values = 40:10:40;
-alpha_values = 0.1:0.1:0.1;
-n_trials = 50; % Number of trials
-res_file = "results/temp_comp_v3_sredgapStopping_VS_sredg_d3_p500_i2000.txt";
+m_values = 30:10:30;
+alpha_values = 0.1:0.1:0.3;
+n_trials = 5; % Number of trials
+res_file = "results/time_comp_v3_sredgapStopping_VS_sredg_d3_p500_i2000.txt";
 temp_file = "results/temp_res_file2.txt";
 desc = sprintf("p100 and d3 gamma .95 i2000 ");
 
@@ -56,7 +56,9 @@ trial_results = struct();
 for method_idx = 1:length(methods)
     method = methods{method_idx};
     results.(method.name) = struct( ...
+        'time', zeros(n_trials, length(m_values), length(alpha_values)), ...
         'rmse', zeros(n_trials, length(m_values), length(alpha_values)), ...
+        'avg_time', zeros(length(m_values), length(alpha_values)), ...
         'mean_rmse', zeros(length(m_values), length(alpha_values)), ...
         'std_rmse', zeros(length(m_values), length(alpha_values)), ...
         'recovered', zeros(length(m_values), length(alpha_values)) ...
@@ -90,15 +92,16 @@ for i = 1:length(m_values)
 
                 [~, P_estimated, totla_time] = method.function(data, params);
                 [rmse, ~, ~] = Compute_RMSE(P_true', P_estimated);           
-                results.(method.name).rmse(trial, i, j) = rmse;     
+                results.(method.name).rmse(trial, i, j) = rmse; 
+                results.(method.name).time(trial, i, j) = totla_time;    
             end
         end
         
         fprintf(' (done)\n')
 
         fprintf(fid_temp, '\n#### m = %d, alpha = %.2f\n', m_values(i), alpha_values(j));
-        fprintf(fid_temp, '| Method | Mean RMSE | Std RMSE | Recovered |\n');
-        fprintf(fid_temp, '|--------|-----------|----------|-----------|\n');
+        fprintf(fid_temp, '| Method | Mean RMSE | Std RMSE | Recovered | Avg. Time (s) |\n');
+        fprintf(fid_temp, '|--------|-----------|----------|-----------|---------------|\n');
 
 
         for method_idx = 1:length(methods)
@@ -108,18 +111,21 @@ for i = 1:length(m_values)
             results.(method.name).mean_rmse(i, j) = mean(rmse_sorted(3:end-2));
             results.(method.name).std_rmse(i, j) = std(rmse_sorted);
             results.(method.name).recovered(i, j) = sum(rmse_values < recovery_threshold);
+            results.(method.name).avg_time(i, j) = mean(results.(method.name).time(:, i, j));
 
-            fprintf(fid_temp, '| %s | %.4f | %.4f | %d |\n', ...
+            fprintf(fid_temp, '| %s | %.4f | %.4f | %d | %.4f |\n', ...
                 method.name, ...
                 results.(method.name).mean_rmse(i, j), ...
                 results.(method.name).std_rmse(i, j), ...
-                results.(method.name).recovered(i, j));
+                results.(method.name).recovered(i, j), ...
+                results.(method.name).avg_time(i, j));
 
-            fprintf("%s: Mean RMSE: %.4f, Std RMSE: %.4f, Recovered: %d\n", ...
+            fprintf("%s: Mean RMSE: %.4f, Std RMSE: %.4f, Recovered: %d, Time: %.4f\n", ...
                 method.name, ...
                 results.(method.name).mean_rmse(i, j), ...
                 results.(method.name).std_rmse(i, j), ...
-                results.(method.name).recovered(i, j));
+                results.(method.name).recovered(i, j), ...
+                results.(method.name).avg_time(i, j));
         end
         
         fprintf("------------------------- \n");
@@ -138,7 +144,7 @@ for method_idx = 1:length(methods)
     fprintf(fid, '%s\n', method.desc);
     fprintf(fid, ' \n');
     write_markdown_table(fid, alpha_values, m_values, ...
-        results.(method.name).mean_rmse, results.(method.name).std_rmse, results.(method.name).recovered);
+        results.(method.name).mean_rmse, results.(method.name).avg_time, results.(method.name).recovered);
     fprintf(fid, ' \n');
 end
 fclose(fid);

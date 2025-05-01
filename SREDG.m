@@ -18,6 +18,7 @@ function [X,P,time_counter] = SREDG(data, params)
     E = data.E_true;
     F = data.F_obs; % corrupted distance matrix
     F_true = data.F_true; % true distance matrix
+    P_star = data.P_true;
     r = params.d + 2; % rank of the distance matrix
 
     if isfield(params, 'RPCA')
@@ -63,14 +64,17 @@ function [X,P,time_counter] = SREDG(data, params)
         X = dist2gram(D_est, size(E, 1)); % corrupted Gram matrix
     end
 
-    tEnd = toc(tstart);
-    time_counter = time_counter + tEnd;
 
-    if show_output >= 1
-        fprintf('SREDG: time = %f seconds\n', time_counter);
-    end
-
-    % fix the negative eigenvalues and ensure symmetry
+    % fix the Gram matrix to be positive semidefinite
     X = fix_gram_matrix(X);
     P = gram_to_points(X, r-2);
+
+    time_counter = toc(tstart) + time_counter; % total time
+
+    if show_output >= 1
+        err_P = Compute_RMSE(P_star', P);
+        fprintf('SREDGAP: err_P = %.4g, time= %.4f\n', err_P,  time_counter);
+    end
+
+    
 end

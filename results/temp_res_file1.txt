@@ -3,71 +3,125 @@
 #### m = 20, alpha = 0.10
 | Method | Mean RMSE | Std RMSE | Recovered |
 |--------|-----------|----------|-----------|
-| SREDG_RPCAB | 2.1791 | 1.6599 | 5 |
-| SREDG | 2.1523 | 1.4995 | 4 |
+| SREDGAAP | 17.3165 | 24.9263 | 8 |
+| SREDG | 8.6722 | 3.6401 | 0 |
 
 #### m = 20, alpha = 0.20
 | Method | Mean RMSE | Std RMSE | Recovered |
 |--------|-----------|----------|-----------|
-| SREDG_RPCAB | 8.0313 | 1.7815 | 0 |
-| SREDG | 8.1532 | 1.6091 | 0 |
+| SREDGAAP | 52.3495 | 35.4423 | 1 |
+| SREDG | 18.3468 | 4.3883 | 0 |
 
 #### m = 20, alpha = 0.30
 | Method | Mean RMSE | Std RMSE | Recovered |
 |--------|-----------|----------|-----------|
-| SREDG_RPCAB | 17.4144 | 2.7627 | 0 |
-| SREDG | 16.6174 | 2.2648 | 0 |
+| SREDGAAP | 105.8586 | 60.6890 | 0 |
+| SREDG | 35.5905 | 5.8179 | 0 |
+
+#### m = 25, alpha = 0.10
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDGAAP | 8.1459 | 14.4876 | 21 |
+| SREDG | 3.8065 | 3.2641 | 14 |
+
+#### m = 25, alpha = 0.20
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDGAAP | 28.2834 | 23.8826 | 2 |
+| SREDG | 11.2883 | 2.9696 | 0 |
+
+#### m = 25, alpha = 0.30
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDGAAP | 78.2731 | 48.4353 | 0 |
+| SREDG | 22.1713 | 5.0015 | 0 |
 
 #### m = 30, alpha = 0.10
 | Method | Mean RMSE | Std RMSE | Recovered |
 |--------|-----------|----------|-----------|
-| SREDG_RPCAB | 0.0003 | 0.1576 | 48 |
-| SREDG | 0.0003 | 0.1607 | 48 |
+| SREDGAAP | 2.0169 | 9.3642 | 39 |
+| SREDG | 1.6835 | 2.8608 | 29 |
 
 #### m = 30, alpha = 0.20
 | Method | Mean RMSE | Std RMSE | Recovered |
 |--------|-----------|----------|-----------|
-| SREDG_RPCAB | 1.6259 | 1.3318 | 10 |
-| SREDG | 1.6029 | 1.2334 | 10 |
+| SREDGAAP | 28.4597 | 31.9504 | 8 |
+| SREDG | 7.3853 | 3.1084 | 0 |
 
 #### m = 30, alpha = 0.30
 | Method | Mean RMSE | Std RMSE | Recovered |
 |--------|-----------|----------|-----------|
-| SREDG_RPCAB | 5.5826 | 1.3958 | 0 |
-| SREDG | 5.4590 | 1.3246 | 0 |
+| SREDGAAP | 61.8980 | 37.8556 | 0 |
+| SREDG | 13.5410 | 2.6897 | 0 |
+
+#### m = 35, alpha = 0.10
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDGAAP | 0.5015 | 8.2343 | 44 |
+| SREDG | 0.5202 | 1.9419 | 41 |
+
+#### m = 35, alpha = 0.20
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDGAAP | 11.0313 | 16.1368 | 19 |
+| SREDG | 4.3730 | 2.9373 | 7 |
+
+#### m = 35, alpha = 0.30
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDGAAP | 36.0734 | 38.6765 | 5 |
+| SREDG | 10.0760 | 2.7629 | 0 |
 
 #### m = 40, alpha = 0.10
 | Method | Mean RMSE | Std RMSE | Recovered |
 |--------|-----------|----------|-----------|
-| SREDG_RPCAB | 0.0000 | 0.0000 | 50 |
-| SREDG | 0.0000 | 0.0000 | 50 |
+| SREDGAAP | 0.0000 | 5.4701 | 48 |
+| SREDG | 0.1649 | 0.9093 | 44 |
 
 #### m = 40, alpha = 0.20
 | Method | Mean RMSE | Std RMSE | Recovered |
 |--------|-----------|----------|-----------|
-| SREDG_RPCAB | 0.1242 | 0.5518 | 41 |
-| SREDG | 0.1471 | 0.5786 | 41 |
+| SREDGAAP | 7.3649 | 12.6508 | 26 |
+| SREDG | 2.8293 | 2.9478 | 16 |
 
 #### m = 40, alpha = 0.30
 | Method | Mean RMSE | Std RMSE | Recovered |
 |--------|-----------|----------|-----------|
-| SREDG_RPCAB | 1.7997 | 1.1404 | 4 |
-| SREDG | 1.8116 | 1.0535 | 3 |
+| SREDGAAP | 34.6245 | 34.2114 | 7 |
+| SREDG | 7.0537 | 2.5004 | 0 |
+
+#### m = 45, alpha = 0.10
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDGAAP | 0.1909 | 6.0126 | 47 |
+| SREDG | 0.0000 | 0.7074 | 48 |
+
+#### m = 45, alpha = 0.20
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDGAAP | 3.1884 | 9.4005 | 35 |
+| SREDG | 1.3837 | 2.3537 | 30 |
+
+#### m = 45, alpha = 0.30
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| SREDGAAP | 26.8465 | 26.2563 | 7 |
+| SREDG | 5.4881 | 2.3654 | 3 |
 
 #### m = 50, alpha = 0.10
 | Method | Mean RMSE | Std RMSE | Recovered |
 |--------|-----------|----------|-----------|
-| SREDG_RPCAB | 0.0000 | 0.0000 | 50 |
+| SREDGAAP | 0.0000 | 3.3744 | 49 |
 | SREDG | 0.0000 | 0.0000 | 50 |
 
 #### m = 50, alpha = 0.20
 | Method | Mean RMSE | Std RMSE | Recovered |
 |--------|-----------|----------|-----------|
-| SREDG_RPCAB | 0.0000 | 0.0436 | 49 |
-| SREDG | 0.0000 | 0.0717 | 49 |
+| SREDGAAP | 3.2567 | 9.5970 | 33 |
+| SREDG | 0.3046 | 1.3061 | 41 |
 
 #### m = 50, alpha = 0.30
 | Method | Mean RMSE | Std RMSE | Recovered |
 |--------|-----------|----------|-----------|
-| SREDG_RPCAB | 0.0792 | 0.3096 | 40 |
-| SREDG | 0.1151 | 0.4633 | 39 |
+| SREDGAAP | 14.3634 | 20.4480 | 16 |
+| SREDG | 3.1768 | 2.4437 | 6 |

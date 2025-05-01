@@ -1,0 +1,17 @@
+p100 and d3 gamma .95 i2000 
+**Method: SREDGAP(num_trials = 50)**
+SREDG AP with stopping 
+ 
+| m \ alpha | 0.10 |
+|---|---|
+| 40 | 0.359 (3.10) [45] |
+
+ 
+**Method: SREDG(num_trials = 50)**
+SREDG CISS paper
+ 
+| m \ alpha | 0.10 |
+|---|---|
+| 40 | 0.027 (0.87) [47] |
+
+ 

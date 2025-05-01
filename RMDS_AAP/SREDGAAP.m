@@ -34,7 +34,7 @@ function [Xk, Pk, timer] = SREDGAAP(data, params)
 
         known_row_id = get_field(params, 'known_row_id', 1); % known row id
         known_row_F = F_star(known_row_id, :); % known row of F_star
-        F_obs(known_row_id, :) = known_row_F; % set the known row in F_obs
+        % F_obs(known_row_id, :) = known_row_F; % set the known row in F_obs
         
         % initialization 
         % Hard threshold to find initial outliers
@@ -86,7 +86,8 @@ function [Xk, Pk, timer] = SREDGAAP(data, params)
         % This function is used to map Gram matrix L -> EDM
         % operatorA(L) = diag(L)*1^T + 1*diag(L)^T - 2L
         % new: B to F 
-        F = compute_F(B, E, known_row_F, k);
+        % F = compute_F(B, E, known_row_F, k);
+        F = computeF2(B, E);
     end
     
     
@@ -96,7 +97,7 @@ function [Xk, Pk, timer] = SREDGAAP(data, params)
         % with J = I_n - (1/n) * 11^T
         % new: F to B
     
-        B = compute_B(E, F);
+        B = compute_B(E, F);        
     end
     
     function Zproj = projTangent(Z, Uk, Vk)

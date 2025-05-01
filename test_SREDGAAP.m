@@ -2,13 +2,13 @@
 clear; clc;
 load_directory
 
-n_trials = 50; % Number of trials
-alpha = 0.1; % percentage of outliers
-m = 20; 
+n_trials = 1; % Number of trials
+alpha = 0.2; % percentage of outliers
+m = 40; 
 show_output = 0;
-max_iter = 200;
+max_iter = 2000;
 
-p = 500;  % number of points
+p = 100;  % number of points
 d = 2;    % dimension of the points
 r = d + 2; 
 
@@ -31,6 +31,8 @@ for i = 1:n_trials
     params.d = d; % dimension of the points
     params.alpha = alpha;
     params.known_row_id = 1;
+    params.accelerated = false; % Use accelerated projection
+    params.gamma = 0.90; % gamma = 0.99
 
 
     [~, P_estimated, ~ ] = SREDGAAP(data, params);

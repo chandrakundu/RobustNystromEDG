@@ -1,0 +1,20 @@
+Compare initial implementation AP with stoping criteria.
+
+**Method: AAP_vanilla(num_trials = 10)**
+AAP_vanilla
+ 
+| m \ alpha | 0.10 | 0.20 |
+|---|---|---|
+| 30 | 0.000 (0.00) [10] | 0.000 (3.56) [9] |
+| 40 | 0.000 (0.00) [10] | 0.000 (0.00) [10] |
+
+ 
+**Method: AP_stopping(num_trials = 10)**
+SREDG AAP 99
+ 
+| m \ alpha | 0.10 | 0.20 |
+|---|---|---|
+| 30 | 0.000 (0.00) [10] | 0.000 (3.56) [9] |
+| 40 | 0.000 (0.00) [10] | 0.000 (0.00) [10] |
+
+ 

@@ -1,20 +1,6 @@
-function [Xk, Pk, timer] = SREDGAAP(data, params)
-    % RMDS_AAP  Robust MDS via Accelerated Alternating Projections.
-    %
-    %
-    %   Inputs:
-    %       D        - (n x n) observed EDM (symmetric)
-    %       r        - target rank
-    %       zeta0    - initial threshold parameter (scalar)
-    %       gamma    - decay rate in (0,1)
-    %       maxIter  - maximum number of iterations
-    %       tol      - convergence tolerance (e.g., 1e-14)
-    %
-    %   Outputs:
-    %       Lk       - final Gram matrix (n x n)
-    %       Sk       - final outlier matrix (n x n)
-    %       Xk       - points. factor of Lk, i.e. Lk ~= Xk * Xk', up to rounding
-    %
+function [Xk, Pk, timer] = SREDGAAP_EXP1(data, params)
+    
+   
         timer = 0;
         E = data.E_true;
         F_obs = data.F_obs;
@@ -31,6 +17,7 @@ function [Xk, Pk, timer] = SREDGAAP(data, params)
         gamma = get_field(params, 'gamma', 0.9);
         d = get_field(params, 'd', 2); % point dimension
         r = get_field(params, 'r', d+2); % gram dimension
+        accelerated = get_field(params, 'accelerated', true); % use accelerated projection
 
         known_row_id = get_field(params, 'known_row_id', 1); % known row id
         known_row_F = F_star(known_row_id, :); % known row of F_star
@@ -42,10 +29,18 @@ function [Xk, Pk, timer] = SREDGAAP(data, params)
 
         % Compute initial L^1
         Fk = F_obs - S0;
-        % Fk = F_star + randn(size(F_star)) * 10;
         B0 = operatorB(Fk, E);  
         Bk = projHr(B0, d);
         Sk = S0;
+
+        % display initial errors 
+        if show_output == 2
+            [~, Pk] = get_gram_and_points(E, Bk, d);
+            err_P = Compute_RMSE(P_star', Pk);
+            err_FoFs = norm(F_obs - F_star, 'fro') / norm(F_star, 'fro');
+            err_FkFs = norm(Fk - F_star, 'fro') / norm(F_star, 'fro');
+            fprintf('Initial: err_P = %.4g, err_FoFs = %.4g, err_FkFs = %.4g\n', err_P, err_FoFs, err_FkFs);            
+        end
 
         for k=1:max_iter
             % Update threshold
@@ -60,25 +55,44 @@ function [Xk, Pk, timer] = SREDGAAP(data, params)
             Bk_new = operatorB(Fk, E);
 
             % project 
-            [Uk, ~, Vk] = svds(Bk_new, d); % SVD of Bk_new
-            Bk_new = projTangent(Bk_new, Uk, Vk); % project onto tangent space
+            if accelerated
+                [Uk, ~, Vk] = svds(Bk_new, d); % SVD of Bk_new
+                Bk_new = projTangent(Bk_new, Uk, Vk); % project onto tangent space
+            end
             Bk_new = projHr(Bk_new, d); % project onto rank-d space
+
+            diffBk = norm(Bk_new - Bk, 'fro') / norm(Bk, 'fro'); % relative difference
             
             Bk = Bk_new; % update Bk
+
+            if k > 200 && diffBk < tol                
+                break;
+            end
+
+            if show_output == 2
+                % compute errors
+                [~, Pk] = get_gram_and_points(E, Bk, d);
+                err_P = Compute_RMSE(P_star', Pk);
+                err_FkFs = norm(Fk - F_star, 'fro') / norm(F_star, 'fro');
+                fprintf('Iter %d: err_P = %.4g, err_FkFs = %.4g, diffBk = %.4g\n', k, err_P, err_FkFs, diffBk);       
+            end
             
         end
 
         % final output
-        A = compute_A(E);
-        C = Bk' * pinv(A, 0.01) * Bk;
-        Xk = [A Bk; Bk' C];
-        Xk = projHrPlus(Xk, d); % project onto rank-d space     
-        Pk = gram_to_points(Xk, d); % get points from Gram matrix     
-        disp(k);
+        [Xk, Pk] = get_gram_and_points(E, Bk, d); % get points from Gram matrix
     end
     
     %% =============== Helper Subfunctions ===============
     
+    function [Xk, Pk] = get_gram_and_points(E, Bk, d)
+        A = compute_A(E);
+        C = Bk' * pinv(A, 0.01) * Bk;
+        Xk = [A Bk; Bk' C];
+        Xk = projHrPlus(Xk, d); % project onto rank-d space     
+        Pk = gram_to_points(Xk, d); % get points from Gram matrix  
+    end
+
     function Zthr = T_hardThreshold(Z, zeta)
     % T_hardThreshold   Hard thresholding operator
     %   Zthr(i,j) = Z(i,j) if |Z(i,j)| > zeta, otherwise 0.

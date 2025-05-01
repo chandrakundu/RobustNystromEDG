@@ -2,27 +2,17 @@ clear;
 load_directory;
 
 % User-defined parameters
-m_values = 40:10:40;
-alpha_values = 0.1:0.1:0.1;
-n_trials = 50; % Number of trials
-res_file = "results/temp_comp_v3_sredgapStopping_VS_sredg_d3_p500_i2000.txt";
-temp_file = "results/temp_res_file2.txt";
-desc = sprintf("p100 and d3 gamma .95 i2000 ");
+m_values = 30:10:40;
+alpha_values = 0.1:0.1:0.2;
+n_trials = 10; % Number of trials
+res_file = "results/exp_sredgaap/temp_v01_aap_different_stopping_d2_p100_i2000.txt";
+temp_file = "results/exp_sredgaap/temp_res_file2.txt";
+desc = sprintf("Compare initial implementation AP with stoping criteria.\n");
 
-p = 500;  % number of points
-d = 3;    % dimension of the points
+p = 100;  % number of points
+d = 2;    % dimension of the points
 
 % Define methods to compare
-
-
-% SREDG PARAMS
-params.RPCA = @AccAltProj;
-params.param_function = @get_rpca_params;
-params.show_output = 0; % Suppress output
-params.max_iter = 2000; % Maximum number of iterations
-params.tol = 1e-14; % Tolerance for convergence
-params.d = d; % Dimension of the points
-params.nyston = "gram"; 
 
 % SREDG_AAP PARAMS
 paramsAAP.show_output = 0; % Suppress output
@@ -30,25 +20,48 @@ paramsAAP.max_iter = 2000; % Maximum number of iterations
 paramsAAP.tol = 1e-14; % Tolerance for convergence
 paramsAAP.d = d; % Dimension of the points
 paramsAAP.known_row_id = 1;
-paramsAAP.gamma = .95;
+paramsAAP.accelerated = false;
+paramsAAP.gamma = 0.95; 
+
+paramsAP = paramsAAP;
+% paramsAAP90.gamma = 0.9; % gamma = 0.9
+% paramsAAP99 = paramsAAP;
+% paramsAAP99.gamma = 0.99; % gamma = 0.92
+
+
+
 
 
 methods = {
-    struct('name', 'SREDGAP', ...
+    struct('name', 'AAP_vanilla', ...
      'function', @SREDGAP, ....
-     'params',  paramsAAP, ...
-    'desc', 'SREDG AP with stopping '),
-    % struct('name', 'SREDG_AAP', ...
-    %  'function', @SREDG_AAP, ....
-    %  'params',  paramsAAP, ...
-    %   'desc', 'SREDG AAP without projection'),
-    struct('name', 'SREDG', ...
-     'function', @SREDG, ....
-     'params',  params, ...
-      'desc', 'SREDG CISS paper')
+     'params',  paramsAP, ...
+    'desc', 'AAP_vanilla'),
+    struct('name', 'AP_stopping', ...
+     'function', @SREDGAP, ....
+     'params',  paramsAP, ...
+    'desc', 'SREDG AAP 99'),
 };
 
-recovery_threshold = 1;
+
+
+
+% methods = {
+%     struct('name', 'SREDGAAP', ...
+%      'function', @SREDGAAP, ....
+%      'params',  paramsAAP, ...
+%     'desc', 'SREDG AAP new implementation from RMDSAAP'),
+%     struct('name', 'SREDG_AAP', ...
+%      'function', @SREDG_AAP, ....
+%      'params',  paramsAAP, ...
+%       'desc', 'SREDG AAP without projection'),
+%     struct('name', 'SREDG', ...
+%      'function', @SREDG, ....
+%      'params',  params, ...
+%       'desc', 'SREDG CISS paper')
+% };
+
+recovery_threshold = 1e-1;
 
 
 results = struct();
@@ -88,7 +101,7 @@ for i = 1:length(m_values)
                 method = methods{method_idx};
                 params = method.params;
 
-                [~, P_estimated, totla_time] = method.function(data, params);
+                [~, P_estimated, ~] = method.function(data, params);
                 [rmse, ~, ~] = Compute_RMSE(P_true', P_estimated);           
                 results.(method.name).rmse(trial, i, j) = rmse;     
             end

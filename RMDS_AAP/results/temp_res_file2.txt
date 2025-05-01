@@ -1,0 +1,55 @@
+### Temporary Comparison (num_trials = 50)
+
+#### m = 100, alpha = 0.10
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| RMDSAAP | 0.0000 | 0.0005 | 50 |
+| RMDSRPCA | 6.3789 | 12.3091 | 1 |
+
+#### m = 100, alpha = 0.20
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| RMDSAAP | 0.0000 | 4.1849 | 49 |
+| RMDSRPCA | 22.0745 | 24.2578 | 0 |
+
+#### m = 100, alpha = 0.30
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| RMDSAAP | 4.9173 | 12.5371 | 38 |
+| RMDSRPCA | 41.6194 | 22.8186 | 0 |
+
+#### m = 300, alpha = 0.10
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| RMDSAAP | 0.0000 | 0.0000 | 50 |
+| RMDSRPCA | 0.4389 | 0.9338 | 37 |
+
+#### m = 300, alpha = 0.20
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| RMDSAAP | 0.0000 | 0.0000 | 50 |
+| RMDSRPCA | 0.6740 | 1.0423 | 32 |
+
+#### m = 300, alpha = 0.30
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| RMDSAAP | 0.0000 | 0.0000 | 50 |
+| RMDSRPCA | 0.7822 | 1.2002 | 29 |
+
+#### m = 500, alpha = 0.10
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| RMDSAAP | 0.0000 | 0.0000 | 50 |
+| RMDSRPCA | 0.0000 | 0.2581 | 48 |
+
+#### m = 500, alpha = 0.20
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| RMDSAAP | 0.0000 | 0.0000 | 50 |
+| RMDSRPCA | 0.0000 | 0.2487 | 48 |
+
+#### m = 500, alpha = 0.30
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| RMDSAAP | 0.0000 | 0.0000 | 50 |
+| RMDSRPCA | 0.0587 | 0.7176 | 46 |

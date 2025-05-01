@@ -29,6 +29,7 @@ function [Lk, Xk, timer] = RMDSRPCA(data, params)
         r = get_field(params, 'd', 2); % target rank
         RPCA = get_field(params, 'RPCA', @AccAltProj);
         para = get_rpca_params(D_star, r+2);
+        para.show_output = show_output;
 
 
         [D_hat,~] = RPCA(D, r+2, para);

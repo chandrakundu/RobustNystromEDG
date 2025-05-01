@@ -3,7 +3,7 @@ function [X_estimated, P_estimated, time_counter] = SREDG_AAP(data, params)
     % SREDG_AAP:  SREDG with Accelerated Alternating Projection (AAP) method
 
     E = data.E_true;
-    F_corrupted = data.F_corrupted; 
+    F_corrupted = data.F_obs; 
     [m, n] = size(F_corrupted);
     F_star = data.F_true; 
     P_star = data.P_true;
@@ -88,14 +88,14 @@ function [X_estimated, P_estimated, time_counter] = SREDG_AAP(data, params)
 
 
         Rk = F_corrupted - Fk_new; 
-        % zeta = zeta0 * (gamma^(k-1)); 
-        % S0 = hard_thresholding(Rk, zeta); 
+        zeta = zeta0 * (gamma^(k-1)); 
+        S0 = hard_thresholding(Rk, zeta); 
         
 
         Zk = F_star - Fk_new;
-        zeta = 0.95*max(abs(Zk(:)));
-        S0 = hard_thresholding(Rk, zeta); 
-        sum(sum(S0 ~= 0))/(m*n)
+        % zeta = 0.95*max(abs(Zk(:)));
+        % S0 = hard_thresholding(Rk, zeta); 
+        % sum(sum(S0 ~= 0))/(m*n)
 
 
         Fk_new = F_corrupted - S0;

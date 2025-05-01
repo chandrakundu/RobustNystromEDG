@@ -1,0 +1,25 @@
+### Temporary Comparison (num_trials = 10)
+
+#### m = 30, alpha = 0.10
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| AAP_vanilla | 0.0000 | 0.0003 | 10 |
+| AP_stopping | 0.0000 | 0.0003 | 10 |
+
+#### m = 30, alpha = 0.20
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| AAP_vanilla | 0.0000 | 3.5608 | 9 |
+| AP_stopping | 0.0000 | 3.5608 | 9 |
+
+#### m = 40, alpha = 0.10
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| AAP_vanilla | 0.0000 | 0.0021 | 10 |
+| AP_stopping | 0.0000 | 0.0021 | 10 |
+
+#### m = 40, alpha = 0.20
+| Method | Mean RMSE | Std RMSE | Recovered |
+|--------|-----------|----------|-----------|
+| AAP_vanilla | 0.0000 | 0.0002 | 10 |
+| AP_stopping | 0.0000 | 0.0002 | 10 |

@@ -54,8 +54,8 @@ propack_exist = true;
 norm_of_D = norm(D, 'fro'); 
 
 %% Default/Inputed parameters
-max_iter  = 100;
-tol       = 1e-5;
+max_iter  = 500;
+tol       = 1e-14;
 beta      = 1/(2*nthroot(m*n,4));
 beta_init = 4*beta;
 gamma     = 0.7;    
@@ -176,6 +176,7 @@ for t = 1 : max_iter
     end
 end
 
-
-fprintf('Maximum iterations reached, final error: %e.\n======================================\n', err(t));
+if show_output == 2
+    fprintf('Maximum iterations reached, final error: %e.\n======================================\n', err(t));
+end
 end

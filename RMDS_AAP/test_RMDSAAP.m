@@ -4,10 +4,10 @@ load_directory
 
 n_trials = 1; % Number of trials
 alpha = 0.3; % percentage of outliers
-show_output = 0;
+show_output = 2;
 max_iter = 100;
 
-p = 101;  % number of points
+p = 500;  % number of points
 d = 2;    % dimension of the points
 r = d + 2; 
 
@@ -15,7 +15,7 @@ rmse_all = zeros(n_trials, 1);
 
 for i = 1:n_trials
     % [D_obs, X_true, P_true, D_true] = generate_data_RDMS(alpha, p, d); % Generate data
-    [D_obs, X_true, P_true, D_true] = generate_data_SREDG(alpha, p, d);
+    [D_obs, X_true, P_true, D_true] = generate_data_RMDSSREDG(alpha, p, d);
 
     data = struct( ...
         'D_obs', D_obs, ... 
